@@ -3,23 +3,99 @@
 
 <PageTitle>BlazorFastAddToCart</PageTitle>
 
-<div class="hero">
+<div class="page-header">
     <h1>BlazorFastAddToCart</h1>
-    <p class="subtitle">A high-performance Blazor component for character-by-character text animation</p>
-    <div style="height: 45px; width: 45px; line-height: 45px; background: yellow;" id="destination">
-        🛒
+    <p class="page-subtitle">A high-performance Blazor component for animating items into a cart with customizable easing functions</p>
+</div>
+
+<!-- Cart Icon -->
+<div class="cart-container">
+    <div class="cart" id="cart">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count">@cartCount</span>
     </div>
 </div>
 
+<!-- Product Grid Demo -->
 <section class="demo-section">
-    <h2>Live Demo</h2>
-    <div class="demo-box">
-        <AddToCart Destination="#destination">
-            <button>Add Me To Cart!</button>
-        </AddToCart>
+    <h2>Product Grid Demo</h2>
+    <p>Click on any product to see it animate into the cart!</p>
+    
+    <div class="product-grid">
+        @for (int i = 1; i <= 6; i++)
+        {
+            <div class="product-card">
+                <AddToCart Destination="#cart" OnAnimationComplete="HandleAddToCart">
+                    <div class="product-image">
+                        <img src="https://picsum.photos/200/200?random=@i" alt="Product @i" />
+                    </div>
+                    <div class="product-info">
+                        <h3>Product @i</h3>
+                        <p class="product-price">$@(i * 9.99)</p>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </AddToCart>
+            </div>
+        }
     </div>
 </section>
 
+<!-- Single Product Demo -->
+<section class="demo-section">
+    <h2>Single Product Demo</h2>
+    <p>Click the product image to add it to the cart:</p>
+    
+    <div class="single-product-demo">
+        <div class="item-details">
+            <div class="item-details__product">
+                <AddToCart Destination="#cart" OnAnimationComplete="HandleAddToCart">
+                    <img src="https://picsum.photos/300/300?random=10" alt="Featured Product" />
+                </AddToCart>
+            </div>
+            <div class="item-info">
+                <h3>Featured Product</h3>
+                <p>Premium quality item with smooth animation</p>
+                <p class="price">$49.99</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Custom Easing Demo -->
+<section class="demo-section">
+    <h2>Custom Easing Demo</h2>
+    <p>Try different easing functions:</p>
+    
+    <div class="easing-demo">
+        <div class="easing-controls">
+            <label>
+                Speed (seconds):
+                <input type="range" min="0.3" max="2" step="0.1" @bind="customSpeed" @bind:event="oninput" />
+                <span>@customSpeed.ToString("F1")s</span>
+            </label>
+        </div>
+        
+        <div class="product-grid">
+            @for (int i = 11; i <= 13; i++)
+            {
+                <div class="product-card">
+                    <AddToCart Destination="#cart" Speed="@customSpeed" OnAnimationComplete="HandleAddToCart">
+                        <div class="product-image">
+                            <img src="https://picsum.photos/200/200?random=@i" alt="Product @i" />
+                        </div>
+                        <div class="product-info">
+                            <h3>Custom Speed @(i - 10)</h3>
+                            <p class="product-price">$@(i * 9.99)</p>
+                            <button class="add-to-cart-btn">Add to Cart</button>
+                        </div>
+                    </AddToCart>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Code Examples -->
 <section class="demo-section">
     <h2>Installation</h2>
     
@@ -37,17 +113,23 @@
 <section class="demo-section">
     <h2>Basic Usage</h2>
     
-    <div class="player-container">
-        <div class="demo-box">
-            
-        </div>
-        
-    </div>
+    <CodeSample>
+        <pre><code class="language-xml">&lt;AddToCart Destination="#cart"&gt;
+    &lt;img src="product.jpg" alt="Product" /&gt;
+&lt;/AddToCart&gt;</code></pre>
+    </CodeSample>
+    
+    <p style="margin-top: 1rem;">With custom speed and easing:</p>
     
     <CodeSample>
-        <pre><code class="language-xml">&lt;Typewriter Speed="60" Autostart="false"&gt;
-    &lt;p&gt;Click the Start button to begin the animation!&lt;/p&gt;
-&lt;/Typewriter&gt;</code></pre>
+        <pre><code class="language-xml">&lt;AddToCart 
+    Destination="#cart" 
+    Speed="0.8"
+    EasingX="@CubicBezier.CartX"
+    EasingY="@CubicBezier.CartY"
+    EasingScale="@CubicBezier.CartScale"&gt;
+    &lt;button&gt;Add to Cart&lt;/button&gt;
+&lt;/AddToCart&gt;</code></pre>
     </CodeSample>
 </section>
 
