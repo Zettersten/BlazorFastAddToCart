@@ -1,5 +1,5 @@
 .creative-demo {
-  margin-bottom: 4rem;
+  margin-bottom: 3rem;
 }
 
 /* Star Collector */
@@ -8,8 +8,8 @@
   min-height: 500px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 1rem;
-  padding: 2rem;
-  margin-top: 1.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
@@ -26,16 +26,15 @@
 
 .collection-box {
   position: absolute;
-  top: 2rem;
-  right: 2rem;
+  top: 1.5rem;
+  right: 1.5rem;
   background: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   text-align: center;
   z-index: 1000;
   min-width: 180px;
-  position: relative;
 }
 
 .collection-glow {
@@ -76,7 +75,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   gap: 1.5rem;
-  padding-top: 8rem;
+  padding-top: 7rem;
 }
 
 .star-item {
@@ -127,23 +126,22 @@
   min-height: 400px;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   border-radius: 1rem;
-  padding: 2rem;
-  margin-top: 1.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
 .inbox {
   position: absolute;
-  top: 2rem;
-  left: 2rem;
+  top: 1.5rem;
+  left: 1.5rem;
   background: white;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   text-align: center;
   z-index: 1000;
   min-width: 200px;
-  position: relative;
 }
 
 .inbox-header {
@@ -180,7 +178,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  padding-top: 8rem;
+  padding-top: 7rem;
   justify-content: center;
 }
 
@@ -224,15 +222,15 @@
   min-height: 500px;
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   border-radius: 1rem;
-  padding: 2rem;
-  margin-top: 1.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
 .battery-wrapper {
   position: absolute;
   top: 50%;
-  left: 2rem;
+  left: 1.5rem;
   transform: translateY(-50%);
   z-index: 1000;
 }
@@ -316,8 +314,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 1.5rem;
-  margin-left: 10rem;
-  padding-top: 2rem;
+  margin-left: 9rem;
+  padding-top: 1.5rem;
 }
 
 .energy-source {
@@ -374,8 +372,8 @@
   min-height: 600px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 1rem;
-  padding: 2rem;
-  margin-top: 1.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
@@ -438,7 +436,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
   gap: 1.5rem;
-  padding: 3rem;
+  padding: 2rem;
 }
 
 .particle {
@@ -468,15 +466,15 @@
   min-height: 500px;
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   border-radius: 1rem;
-  padding: 2rem;
-  margin-top: 1.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
 .treasure-chest {
   position: absolute;
-  top: 2rem;
-  right: 2rem;
+  top: 1.5rem;
+  right: 1.5rem;
   width: 200px;
   height: 150px;
   z-index: 1000;
@@ -535,7 +533,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   gap: 1.5rem;
-  padding-top: 8rem;
+  padding-top: 7rem;
 }
 
 .coin-item {
@@ -565,17 +563,17 @@
   min-height: 500px;
   background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
   border-radius: 1rem;
-  padding: 2rem;
-  margin-top: 1.5rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
   overflow: hidden;
 }
 
 .love-meter {
   position: absolute;
-  top: 2rem;
-  left: 2rem;
+  top: 1.5rem;
+  left: 1.5rem;
   background: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   z-index: 1000;
@@ -648,7 +646,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   gap: 1.5rem;
-  padding-top: 8rem;
+  padding-top: 7rem;
 }
 
 .heart-item {

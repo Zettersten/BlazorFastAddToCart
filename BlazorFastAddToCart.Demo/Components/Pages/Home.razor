@@ -95,6 +95,137 @@
     </div>
 </section>
 
+<!-- Count Parameter Demo -->
+<section class="demo-section">
+    <h2>Multiple Items (Count Parameter)</h2>
+    <p>Add multiple items at once with staggered animations! Set <code>Count</code> to visualize multiple items animating.</p>
+    
+    <div class="count-demo">
+        <div class="count-controls">
+            <label>
+                Items to add:
+                <input type="number" min="1" max="20" @bind="itemCount" @bind:event="oninput" />
+            </label>
+            <span class="count-display">@itemCount item@(itemCount != 1 ? "s" : "")</span>
+        </div>
+        
+        <div class="product-grid">
+            @for (int i = 20; i <= 22; i++)
+            {
+                <div class="product-card">
+                    <AddToCart Destination="#cart" Count="@itemCount" OnAnimationComplete="HandleAddToCart">
+                        <div class="product-image">
+                            <img src="https://picsum.photos/200/200?random=@i" alt="Product @i" />
+                        </div>
+                        <div class="product-info">
+                            <h3>Bulk Add @(i - 19)</h3>
+                            <p class="product-price">$@(i * 9.99)</p>
+                            <button class="add-to-cart-btn">Add @itemCount to Cart</button>
+                        </div>
+                    </AddToCart>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <CodeSample>
+        <pre><code class="language-xml">&lt;AddToCart Destination="#cart" Count="10" OnAnimationComplete="HandleAddToCart"&gt;
+    &lt;button&gt;Add 10 Items&lt;/button&gt;
+&lt;/AddToCart&gt;</code></pre>
+    </CodeSample>
+</section>
+
+<!-- Trigger Parameter Demo -->
+<section class="demo-section">
+    <h2>Custom Trigger Element</h2>
+    <p>Use the <code>Trigger</code> parameter to specify which element should trigger the animation. This is useful when you want to animate a specific part of your content.</p>
+    
+    <div class="trigger-demo">
+        <div class="product-grid">
+            @for (int i = 30; i <= 32; i++)
+            {
+                <div class="product-card">
+                    <AddToCart Destination="#cart" Trigger=".add-to-cart-btn" OnAnimationComplete="HandleAddToCart">
+                        <div class="product-image">
+                            <img src="https://picsum.photos/200/200?random=@i" alt="Product @i" />
+                        </div>
+                        <div class="product-info">
+                            <h3>Product @(i - 29)</h3>
+                            <p class="product-price">$@(i * 9.99)</p>
+                            <button class="add-to-cart-btn">Add to Cart</button>
+                            <p class="trigger-note">Only the button triggers animation</p>
+                        </div>
+                    </AddToCart>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <CodeSample>
+        <pre><code class="language-xml">&lt;AddToCart Destination="#cart" Trigger=".add-to-cart-btn"&gt;
+    &lt;div class="product-card"&gt;
+        &lt;img src="product.jpg" /&gt;
+        &lt;button class="add-to-cart-btn"&gt;Add to Cart&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/AddToCart&gt;</code></pre>
+    </CodeSample>
+</section>
+
+<!-- Progress Tracking Demo -->
+<section class="demo-section">
+    <h2>Animation Progress Tracking</h2>
+    <p>Track animation progress in real-time using the <code>OnAnimationProgress</code> callback. Progress ranges from 0.0 to 1.0.</p>
+    
+    <div class="progress-demo">
+        <div class="progress-indicator">
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: @($"{animationProgress * 100}%")"></div>
+                <span class="progress-text">@($"{animationProgress * 100:F1}%")</span>
+            </div>
+            <p class="progress-status">@progressStatus</p>
+        </div>
+        
+        <div class="product-grid">
+            @for (int i = 40; i <= 42; i++)
+            {
+                <div class="product-card">
+                    <AddToCart Destination="#cart" Count="5" 
+                               OnAnimationProgress="HandleProgressUpdate" 
+                               OnAnimationComplete="HandleProgressComplete">
+                        <div class="product-image">
+                            <img src="https://picsum.photos/200/200?random=@i" alt="Product @i" />
+                        </div>
+                        <div class="product-info">
+                            <h3>Tracked Product @(i - 39)</h3>
+                            <p class="product-price">$@(i * 9.99)</p>
+                            <button class="add-to-cart-btn">Add 5 Items</button>
+                        </div>
+                    </AddToCart>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <CodeSample>
+        <pre><code class="language-xml">&lt;AddToCart Destination="#cart" 
+           Count="10"
+           OnAnimationProgress="HandleProgress"
+           OnAnimationComplete="HandleComplete"&gt;
+    &lt;button&gt;Add Items&lt;/button&gt;
+&lt;/AddToCart&gt;
+
+@@code {
+    private double progress = 0;
+    
+    private void HandleProgress(double progressValue)
+    {
+        progress = progressValue;
+        StateHasChanged();
+    }
+}</code></pre>
+    </CodeSample>
+</section>
+
 <!-- Code Examples -->
 <section class="demo-section">
     <h2>Installation</h2>
