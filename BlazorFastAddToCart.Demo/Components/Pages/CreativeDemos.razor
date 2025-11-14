@@ -1,0 +1,128 @@
+@page "/creative-demos"
+@using BlazorFastAddToCart
+
+<PageTitle>Creative Demos - BlazorFastAddToCart</PageTitle>
+
+<div class="page-header">
+    <h1>Creative Demos</h1>
+    <p class="page-subtitle">Explore non-ecommerce use cases for this animation effect</p>
+</div>
+
+<!-- Star Collector Demo -->
+<section class="demo-section creative-demo">
+    <h2>⭐ Star Collector</h2>
+    <p>Click stars to collect them in your collection!</p>
+    
+    <div class="star-collector-container">
+        <div class="collection-box" id="star-collection">
+            <div class="collection-header">⭐ Collection</div>
+            <div class="collection-count">@starCount stars</div>
+        </div>
+        
+        <div class="stars-field">
+            @for (int i = 1; i <= 20; i++)
+            {
+                <AddToCart Destination="#star-collection" OnAnimationComplete="CollectStar">
+                    <div class="star-item">⭐</div>
+                </AddToCart>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Message Sender Demo -->
+<section class="demo-section creative-demo">
+    <h2>💬 Message Sender</h2>
+    <p>Click messages to send them to the inbox!</p>
+    
+    <div class="message-container">
+        <div class="inbox" id="message-inbox">
+            <div class="inbox-header">📬 Inbox</div>
+            <div class="inbox-count">@messageCount messages</div>
+        </div>
+        
+        <div class="messages-list">
+            @foreach (var msg in messages)
+            {
+                <AddToCart Destination="#message-inbox" OnAnimationComplete="SendMessage">
+                    <div class="message-bubble">
+                        <div class="message-icon">@msg.Icon</div>
+                        <div class="message-text">@msg.Text</div>
+                    </div>
+                </AddToCart>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Energy Transfer Demo -->
+<section class="demo-section creative-demo">
+    <h2>⚡ Energy Transfer</h2>
+    <p>Transfer energy from sources to the battery!</p>
+    
+    <div class="energy-container">
+        <div class="battery" id="energy-battery">
+            <div class="battery-level" style="height: @($"{Math.Min(batteryLevel, 100)}%")"></div>
+            <div class="battery-text">@batteryLevel%</div>
+        </div>
+        
+        <div class="energy-sources">
+            @for (int i = 1; i <= 8; i++)
+            {
+                <AddToCart Destination="#energy-battery" OnAnimationComplete="TransferEnergy">
+                    <div class="energy-source">⚡</div>
+                </AddToCart>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Particle Effect Demo -->
+<section class="demo-section creative-demo">
+    <h2>✨ Particle Collector</h2>
+    <p>Click particles to gather them at the center!</p>
+    
+    <div class="particle-container">
+        <div class="particle-center" id="particle-center">
+            <div class="particle-count">@particleCount</div>
+        </div>
+        
+        <div class="particles-field">
+            @for (int i = 1; i <= 30; i++)
+            {
+                <AddToCart Destination="#particle-center" OnAnimationComplete="CollectParticle">
+                    <div class="particle" style="--delay: @($"{i * 0.1}s")">✨</div>
+                </AddToCart>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private int starCount = 0;
+    private int messageCount = 0;
+    private int batteryLevel = 0;
+    private int particleCount = 0;
+
+    private readonly List<MessageInfo> messages = new()
+    {
+        new("💌", "Hello!"),
+        new("🎉", "Congratulations!"),
+        new("❤️", "Love this!"),
+        new("🚀", "Amazing!"),
+        new("⭐", "Great job!"),
+        new("🎁", "Surprise!"),
+        new("🔥", "Hot stuff!"),
+        new("💎", "Precious!")
+    };
+
+    private void CollectStar() => starCount++;
+    private void SendMessage() => messageCount++;
+    private void TransferEnergy()
+    {
+        batteryLevel = Math.Min(batteryLevel + 12, 100);
+    }
+    private void CollectParticle() => particleCount++;
+
+    private record MessageInfo(string Icon, string Text);
+}
