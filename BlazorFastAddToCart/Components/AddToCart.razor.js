@@ -3,7 +3,8 @@
 
 // WeakMap for O(1) lookups without memory leaks
 const components = new WeakMap();
-const activeAnimations = new WeakSet();
+// Track active animation elements (not triggers) so we can have multiple concurrent animations
+const activeAnimationElements = new WeakSet();
 
 // Inject global styles for cart-item (since it's appended to body, outside component scope)
 let stylesInjected = false;
@@ -106,13 +107,11 @@ export function initialize(triggerElement, destinationSelector, dotNetRef) {
 
 /**
  * Main animation function - matches the JavaScript demo behavior
+ * Supports rapid clicking - multiple animations can run concurrently
  */
 export async function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale, dotNetRef) {
   // Ensure global styles are injected
   ensureStylesInjected();
-  
-  // Early exit if already animating
-  if (activeAnimations.has(triggerElement)) return;
 
   const destination = document.querySelector(destinationSelector);
   if (!destination || !triggerElement) {
@@ -314,8 +313,8 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
   // Small delay to ensure browser has painted the element
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  // Mark as active
-  activeAnimations.add(triggerElement);
+  // Mark this specific animation element as active (allows multiple concurrent animations)
+  activeAnimationElements.add(element);
 
   // To achieve separate easing for X, Y, and scale without GSAP,
   // we'll manually interpolate using cubic bezier easing functions
@@ -403,9 +402,11 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      // Cleanup
-      element.remove();
-      activeAnimations.delete(triggerElement);
+      // Cleanup this specific animation element
+      if (element.parentNode) {
+        element.remove();
+      }
+      activeAnimationElements.delete(element);
       
       // Notify .NET that animation completed
       if (dotNetRef) {
@@ -431,13 +432,17 @@ function showReducedMotionFeedback(destination) {
  */
 export function cancelAll() {
   const flying = document.querySelectorAll('.cart-item');
-  flying.forEach(el => el.remove());
-  activeAnimations.clear();
+  flying.forEach(el => {
+    el.remove();
+    activeAnimationElements.delete(el);
+  });
 }
 
 /**
- * Cleanup function
+ * Cleanup function (for component disposal)
+ * Note: Individual animations clean themselves up, this is just for component-level cleanup
  */
 export function cleanup(triggerElement) {
-  activeAnimations.delete(triggerElement);
+  // No-op since we track individual animation elements, not triggers
+  // All active animations will clean themselves up when they complete
 }
