@@ -17,7 +17,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   private IJSRuntime JS { get; set; } = default!;
 
   [Parameter, EditorRequired]
-  public required string Destination { get; set; }
+  public string Destination { get; set; }
 
   [Parameter]
   public int Speed { get; set; } = 500;
@@ -39,7 +39,13 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
     if (firstRender)
     {
       _dotNetRef = DotNetObjectReference.Create(this);
-      _module = await JS.InvokeAsync<IJSObjectReference>("import", "./AddToCart.razor.js");
+
+      _module = await JS.InvokeAsync<IJSObjectReference>(
+          "import",
+          "./_content/BlazorFastAddToCart/Components/AddToCart.razor.js"
+        )
+        .ConfigureAwait(false);
+
       await _module.InvokeVoidAsync("initialize", _triggerRef, Destination, _dotNetRef);
       _isInitialized = true;
     }

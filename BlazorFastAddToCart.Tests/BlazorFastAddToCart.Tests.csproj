@@ -18,6 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BlazorFastTypewriter\BlazorFastTypewriter.csproj" />
+    <ProjectReference Include="..\BlazorFastAddToCart\BlazorFastAddToCart.csproj" />
   </ItemGroup>
 </Project>

@@ -184,16 +184,6 @@ function showReducedMotionFeedback(destination) {
 }
 
 /**
- * Component cleanup
- */
-export function cleanup(triggerElement) {
-  if (triggerElement) {
-    components.delete(triggerElement);
-    activeAnimations.delete(triggerElement);
-  }
-}
-
-/**
  * Cancel all active animations (for cleanup)
  */
 export function cancelAll() {
