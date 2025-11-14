@@ -1,19 +1,103 @@
-// AddToCart.Ultimate.razor.js
-// Ultimate version: Web Animations API with CSS fallback, zero allocations
+// AddToCart.razor.js
+// Implementation matching the JavaScript demo behavior
 
 // WeakMap for O(1) lookups without memory leaks
 const components = new WeakMap();
-const activeAnimations = new WeakSet();
+// Track active animation elements (not triggers) so we can have multiple concurrent animations
+const activeAnimationElements = new WeakSet();
 
-// Feature detection (done once)
-const supportsWebAnimations = 'animate' in document.createElement('div');
-const supportsComposite = supportsWebAnimations && 'composite' in KeyframeEffect.prototype;
+// Inject global styles for cart-item (since it's appended to body, outside component scope)
+let stylesInjected = false;
+function ensureStylesInjected() {
+  if (stylesInjected) return;
+  
+  const styleId = 'blazor-fast-add-to-cart-styles';
+  if (document.getElementById(styleId)) {
+    stylesInjected = true;
+    return;
+  }
+  
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    /* Cart item animation - JavaScript handles the animation */
+    .cart-item {
+      position: fixed;
+      z-index: 99999;
+      pointer-events: none;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-origin: center center;
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+      visibility: visible;
+      display: block;
+      overflow: visible;
+      box-sizing: border-box;
+    }
+    
+    .cart-item img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain;
+      display: block;
+    }
+    
+    .cart-item > * {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .cart-item {
+        display: none !important;
+      }
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .cart-item {
+        outline: 2px solid currentColor;
+        outline-offset: -2px;
+      }
+    }
+    
+    /* Dark mode optimizations */
+    @media (prefers-color-scheme: dark) {
+      .cart-item {
+        filter: brightness(0.9);
+      }
+    }
+    
+    /* Print styles */
+    @media print {
+      .cart-item {
+        display: none !important;
+      }
+    }
+    
+    /* Forced colors mode */
+    @media (forced-colors: active) {
+      .cart-item {
+        border: 1px solid CanvasText;
+      }
+    }
+  `;
+  
+  document.head.appendChild(style);
+  stylesInjected = true;
+}
 
 /**
  * Initialize component
  */
 export function initialize(triggerElement, destinationSelector, dotNetRef) {
   if (!triggerElement || components.has(triggerElement)) return;
+  
+  // Ensure global styles are injected
+  ensureStylesInjected();
 
   components.set(triggerElement, {
     destination: destinationSelector,
@@ -22,11 +106,12 @@ export function initialize(triggerElement, destinationSelector, dotNetRef) {
 }
 
 /**
- * Main animation function with automatic fallback
+ * Main animation function - matches the JavaScript demo behavior
+ * Supports rapid clicking - multiple animations can run concurrently
  */
-export function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale) {
-  // Early exit if already animating
-  if (activeAnimations.has(triggerElement)) return;
+export async function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale, dotNetRef) {
+  // Ensure global styles are injected
+  ensureStylesInjected();
 
   const destination = document.querySelector(destinationSelector);
   if (!destination || !triggerElement) {
@@ -36,143 +121,302 @@ export function animateToCart(triggerElement, destinationSelector, speed, easing
 
   // Check for reduced motion preference
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    // Skip animation, just show a brief flash
     showReducedMotionFeedback(destination);
     return;
   }
 
-  // Use Web Animations API if supported, otherwise fall back to CSS
-  if (supportsWebAnimations && supportsComposite) {
-    animateWithWebAPI(triggerElement, destination, speed, easingX, easingY, easingScale);
-  } else {
-    animateWithCSS(triggerElement, destination, speed, easingX, easingY, easingScale);
+  // Get bounding rectangles for both elements
+  const cartRect = destination.getBoundingClientRect();
+  
+  // Handle display: contents - get the actual rendered element
+  let sourceElement = triggerElement;
+  let productRect = triggerElement.getBoundingClientRect();
+  const triggerDisplay = window.getComputedStyle(triggerElement).display;
+  
+  // If the trigger has display: contents or zero size, find the first visible child
+  if (productRect.width === 0 || productRect.height === 0 || triggerDisplay === 'contents') {
+    // Try to find the first visible element child (skip text nodes)
+    let firstChild = triggerElement.firstElementChild;
+    
+    // If no element child, try querySelector for common elements
+    if (!firstChild) {
+      firstChild = triggerElement.querySelector('img, div, span, button, a');
+    }
+    
+    if (firstChild) {
+      sourceElement = firstChild;
+      productRect = firstChild.getBoundingClientRect();
+      
+      // Special handling for images - use natural dimensions if bounding rect is zero
+      if ((productRect.width === 0 || productRect.height === 0) && firstChild.tagName === 'IMG') {
+        const img = firstChild;
+        const computedStyle = window.getComputedStyle(img);
+        const computedWidth = parseFloat(computedStyle.width) || 0;
+        const computedHeight = parseFloat(computedStyle.height) || 0;
+        
+        // Try to get dimensions from computed style or natural dimensions
+        if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+          const aspectRatio = img.naturalWidth / img.naturalHeight;
+          let width = computedWidth || img.naturalWidth;
+          let height = computedHeight || img.naturalHeight;
+          
+          // If we have one dimension, calculate the other maintaining aspect ratio
+          if (width > 0 && height === 0) {
+            height = width / aspectRatio;
+          } else if (height > 0 && width === 0) {
+            width = height * aspectRatio;
+          } else if (width === 0 && height === 0) {
+            // Use natural dimensions as fallback
+            width = Math.min(img.naturalWidth, 300);
+            height = width / aspectRatio;
+          }
+          
+          // Create a rect with proper dimensions
+          const imgRect = img.getBoundingClientRect();
+          productRect = {
+            left: imgRect.left || 0,
+            top: imgRect.top || 0,
+            width: width,
+            height: height,
+            right: (imgRect.left || 0) + width,
+            bottom: (imgRect.top || 0) + height
+          };
+        } else if (computedWidth > 0 || computedHeight > 0) {
+          // Use computed dimensions even if image not loaded
+          productRect = {
+            left: productRect.left || 0,
+            top: productRect.top || 0,
+            width: computedWidth || 300,
+            height: computedHeight || 300,
+            right: (productRect.left || 0) + (computedWidth || 300),
+            bottom: (productRect.top || 0) + (computedHeight || 300)
+          };
+        }
+      }
+    }
   }
-}
+  
+  // Validate we have valid dimensions
+  if (productRect.width === 0 || productRect.height === 0) {
+    console.warn('AddToCart: Source element has zero dimensions', sourceElement);
+    return;
+  }
 
-/**
- * Web Animations API implementation (best performance)
- */
-function animateWithWebAPI(triggerElement, destination, speed, easingX, easingY, easingScale) {
-  const { element, distanceX, distanceY } = createFlyingElement(triggerElement, destination);
+  // Calculate center points
+  const cartCenter = {
+    x: cartRect.left + cartRect.width / 2,
+    y: cartRect.top + cartRect.height / 2
+  };
 
-  // Mark as active
-  activeAnimations.add(triggerElement);
+  const productCenter = {
+    x: productRect.left + productRect.width / 2,
+    y: productRect.top + productRect.height / 2
+  };
 
-  // Create independent animations with accumulate compositing
-  // This allows each transform to have its own easing
-  const animations = [
-    // X-axis with custom easing
-    element.animate(
-      { transform: [`translateX(0)`, `translateX(${distanceX}px)`] },
-      { duration: speed, easing: easingX, fill: 'forwards', composite: 'accumulate' }
-    ),
+  // Calculate distance between centers
+  const distance = {
+    x: cartCenter.x - productCenter.x,
+    y: cartCenter.y - productCenter.y
+  };
 
-    // Y-axis with custom easing
-    element.animate(
-      { transform: [`translateY(0)`, `translateY(${distanceY}px)`] },
-      { duration: speed, easing: easingY, fill: 'forwards', composite: 'accumulate' }
-    ),
-
-    // Scale with custom easing
-    element.animate(
-      { transform: ['scale(1)', 'scale(0.2)'] },
-      { duration: speed, easing: easingScale, fill: 'forwards', composite: 'accumulate' }
-    ),
-
-    // Opacity (ease-out)
-    element.animate(
-      [
-        { opacity: 1, offset: 0 },
-        { opacity: 1, offset: 0.8 },
-        { opacity: 0, offset: 1 }
-      ],
-      { duration: speed, easing: 'ease-out', fill: 'forwards' }
-    )
-  ];
-
-  // Cleanup when all animations complete
-  Promise.all(animations.map(a => a.finished))
-    .then(() => cleanup(element, triggerElement))
-    .catch(() => cleanup(element, triggerElement));
-}
-
-/**
- * CSS-based animation fallback
- */
-function animateWithCSS(triggerElement, destination, speed, easingX, easingY, easingScale) {
-  const { element, distanceX, distanceY } = createFlyingElement(triggerElement, destination);
-
-  // Mark as active
-  activeAnimations.add(triggerElement);
-
-  // Set CSS variables for animation
-  const style = element.style;
-  style.setProperty('--translate-x', `${distanceX}px`);
-  style.setProperty('--translate-y', `${distanceY}px`);
-  style.setProperty('--duration', `${speed}ms`);
-  style.setProperty('--easing-x', easingX);
-  style.setProperty('--easing-y', easingY);
-  style.setProperty('--easing-scale', easingScale);
-
-  // Trigger reflow and add animation class
-  element.offsetHeight;
-  element.classList.add('animating');
-
-  // Cleanup after animation
-  const cleanupHandler = () => cleanup(element, triggerElement);
-  element.addEventListener('animationend', cleanupHandler, { once: true });
-  setTimeout(cleanupHandler, speed + 100); // Fallback cleanup
-}
-
-/**
- * Create flying element (shared between both implementations)
- */
-function createFlyingElement(triggerElement, destination) {
-  // Single batched read of layout properties
-  const triggerRect = triggerElement.getBoundingClientRect();
-  const destRect = destination.getBoundingClientRect();
-
-  // Calculate centers and distances
-  const triggerCenterX = triggerRect.left + (triggerRect.width >> 1); // Bit shift for faster division
-  const triggerCenterY = triggerRect.top + (triggerRect.height >> 1);
-  const destCenterX = destRect.left + (destRect.width >> 1);
-  const destCenterY = destRect.top + (destRect.height >> 1);
-
-  const distanceX = destCenterX - triggerCenterX;
-  const distanceY = destCenterY - triggerCenterY;
-
-  // Create element
+  // Create a new element for the item (matching demo code structure)
   const element = document.createElement('div');
-  element.className = 'add-to-cart-flying';
+  element.className = 'cart-item';
+  element.setAttribute('bfatc', '');
+  
+  // Position element at the center of the source element
+  // We position at top-left, then offset by half width/height to center
+  const elementWidth = productRect.width;
+  const elementHeight = productRect.height;
+  const centerX = productRect.left + productRect.width / 2;
+  const centerY = productRect.top + productRect.height / 2;
+  
+  // Set initial position (centered on source element)
+  element.style.left = `${centerX - elementWidth / 2}px`;
+  element.style.top = `${centerY - elementHeight / 2}px`;
+  element.style.width = `${elementWidth}px`;
+  element.style.height = `${elementHeight}px`;
+  element.style.zIndex = '99999'; // Ensure it's above everything
+  element.style.pointerEvents = 'none';
+  element.style.backgroundColor = 'transparent'; // Ensure no background blocks content
 
-  // Clone content efficiently using DocumentFragment
-  const fragment = document.createDocumentFragment();
-  const children = triggerElement.childNodes;
-  for (let i = 0, len = children.length; i < len; i++) {
-    fragment.appendChild(children[i].cloneNode(true));
+  // Clone the content from the actual source element
+  // Special handling for direct image elements
+  if (sourceElement.tagName === 'IMG') {
+    // Clone the image directly with all attributes
+    const clonedImg = sourceElement.cloneNode(true);
+    
+    // Set explicit styles to ensure visibility (using setProperty to avoid cssText issues)
+    clonedImg.style.setProperty('width', '100%', 'important');
+    clonedImg.style.setProperty('height', '100%', 'important');
+    clonedImg.style.setProperty('object-fit', 'contain', 'important');
+    clonedImg.style.setProperty('display', 'block', 'important');
+    clonedImg.style.setProperty('opacity', '1', 'important');
+    clonedImg.style.setProperty('visibility', 'visible', 'important');
+    clonedImg.style.setProperty('max-width', '100%', 'important');
+    clonedImg.style.setProperty('max-height', '100%', 'important');
+    
+    // Ensure src is set (in case it was a data URL or relative path)
+    if (!clonedImg.src && sourceElement.src) {
+      clonedImg.src = sourceElement.src;
+    }
+    
+    element.appendChild(clonedImg);
+  } else {
+    // Try to clone innerHTML first to preserve styles, fallback to node cloning
+    if (sourceElement.innerHTML) {
+      element.innerHTML = sourceElement.innerHTML;
+    } else {
+      const fragment = document.createDocumentFragment();
+      const children = sourceElement.childNodes;
+      for (let i = 0, len = children.length; i < len; i++) {
+        const child = children[i];
+        // Only clone element nodes, skip text nodes
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          fragment.appendChild(child.cloneNode(true));
+        }
+      }
+      element.appendChild(fragment);
+    }
+    
+    // Ensure images and other content are properly sized
+    const images = element.querySelectorAll('img');
+    images.forEach(img => {
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      img.style.display = 'block';
+    });
   }
-  element.appendChild(fragment);
 
-  // Batch all style updates
-  element.style.cssText = `
-        left: ${triggerCenterX}px;
-        top: ${triggerCenterY}px;
-        width: ${triggerRect.width}px;
-        height: ${triggerRect.height}px;
-    `;
-
-  // Single DOM write
+  // Add the element to body
   document.body.appendChild(element);
+  
+  // Force a reflow to ensure element is rendered before animation starts
+  const rect = element.getBoundingClientRect();
+  element.offsetHeight;
+  
+  // Verify element is visible and has dimensions
+  if (rect.width === 0 || rect.height === 0) {
+    console.warn('AddToCart: Cloned element has zero dimensions', {
+      element,
+      rect,
+      sourceElement,
+      sourceRect: productRect
+    });
+    
+    // Try to fix by using source dimensions directly
+    element.style.width = `${productRect.width}px`;
+    element.style.height = `${productRect.height}px`;
+  }
+  
+  // Small delay to ensure browser has painted the element
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  return { element, distanceX, distanceY };
-}
+  // Mark this specific animation element as active (allows multiple concurrent animations)
+  activeAnimationElements.add(element);
 
-/**
- * Cleanup flying element
- */
-function cleanup(element, triggerElement) {
-  element.remove();
-  activeAnimations.delete(triggerElement);
+  // To achieve separate easing for X, Y, and scale without GSAP,
+  // we'll manually interpolate using cubic bezier easing functions
+  const duration = speed * 1000;
+  const startTime = performance.now();
+  
+  // Parse cubic bezier strings to get control points
+  const parseEasing = (easingStr) => {
+    const match = easingStr.match(/cubic-bezier\s*\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/);
+    if (!match) return null;
+    return {
+      x1: parseFloat(match[1]),
+      y1: parseFloat(match[2]),
+      x2: parseFloat(match[3]),
+      y2: parseFloat(match[4])
+    };
+  };
+  
+  // Evaluate cubic bezier at time t (0 to 1)
+  const evaluateBezier = (t, bezier) => {
+    if (!bezier) return t; // Fallback to linear
+    const { x1, y1, x2, y2 } = bezier;
+    
+    // Use Newton-Raphson to find t for given x, then return y
+    // Simplified: approximate using de Casteljau's algorithm
+    let currentT = t;
+    for (let i = 0; i < 8; i++) {
+      const x = cubicBezierX(currentT, x1, x2);
+      const error = x - t;
+      if (Math.abs(error) < 0.001) break;
+      const dx = cubicBezierDerivative(currentT, x1, x2);
+      currentT -= error / dx;
+      currentT = Math.max(0, Math.min(1, currentT));
+    }
+    return cubicBezierY(currentT, y1, y2);
+  };
+  
+  const cubicBezierX = (t, x1, x2) => {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+    return mt3 * 0 + 3 * mt2 * t * x1 + 3 * mt * t2 * x2 + t3 * 1;
+  };
+  
+  const cubicBezierY = (t, y1, y2) => {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+    return mt3 * 0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * 1;
+  };
+  
+  const cubicBezierDerivative = (t, x1, x2) => {
+    const mt = 1 - t;
+    return 3 * mt * mt * x1 + 6 * mt * t * (x2 - x1) + 3 * t * t * (1 - x2);
+  };
+  
+  const easingXBezier = parseEasing(easingX);
+  const easingYBezier = parseEasing(easingY);
+  const easingScaleBezier = parseEasing(easingScale);
+  
+  // Animate using requestAnimationFrame
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Calculate eased values for each component
+    const easedX = evaluateBezier(progress, easingXBezier);
+    const easedY = evaluateBezier(progress, easingYBezier);
+    const easedScale = evaluateBezier(progress, easingScaleBezier);
+    
+    // Calculate current values
+    const currentX = easedX * distance.x;
+    const currentY = easedY * distance.y;
+    const currentScale = 1 + (0.2 - 1) * easedScale;
+    const currentOpacity = progress < 0.8 ? 1 : 1 - ((progress - 0.8) / 0.2);
+    
+    // Apply transform
+    element.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+    element.style.opacity = currentOpacity;
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Cleanup this specific animation element
+      if (element.parentNode) {
+        element.remove();
+      }
+      activeAnimationElements.delete(element);
+      
+      // Notify .NET that animation completed
+      if (dotNetRef) {
+        dotNetRef.invokeMethodAsync('OnAnimationCompleted').catch(() => { /* Ignore errors if method doesn't exist */ });
+      }
+    }
+  };
+  
+  // Start animation
+  requestAnimationFrame(animate);
 }
 
 /**
@@ -187,43 +431,18 @@ function showReducedMotionFeedback(destination) {
  * Cancel all active animations (for cleanup)
  */
 export function cancelAll() {
-  const flying = document.querySelectorAll('.add-to-cart-flying');
-  flying.forEach(el => el.remove());
-  activeAnimations.clear();
-}
-
-/**
- * Utility: Preload images to prevent jank during animation
- */
-export function preloadImages(triggerElement) {
-  const images = triggerElement.querySelectorAll('img');
-  images.forEach(img => {
-    if (!img.complete) {
-      const preload = new Image();
-      preload.src = img.src;
-    }
+  const flying = document.querySelectorAll('.cart-item');
+  flying.forEach(el => {
+    el.remove();
+    activeAnimationElements.delete(el);
   });
 }
 
 /**
- * Performance monitoring (development only)
+ * Cleanup function (for component disposal)
+ * Note: Individual animations clean themselves up, this is just for component-level cleanup
  */
-let perfObserver;
-export function enablePerformanceMonitoring(enabled = true) {
-  if (!enabled && perfObserver) {
-    perfObserver.disconnect();
-    perfObserver = null;
-    return;
-  }
-
-  if (enabled && 'PerformanceObserver' in window && !perfObserver) {
-    perfObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.duration > 16.67) { // Longer than 1 frame at 60fps
-          console.warn(`Slow animation detected: ${entry.duration.toFixed(2)}ms`);
-        }
-      }
-    });
-    perfObserver.observe({ entryTypes: ['measure'] });
-  }
+export function cleanup(triggerElement) {
+  // No-op since we track individual animation elements, not triggers
+  // All active animations will clean themselves up when they complete
 }

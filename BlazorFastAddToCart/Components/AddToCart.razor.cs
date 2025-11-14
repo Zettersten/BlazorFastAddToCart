@@ -20,19 +20,22 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   public string Destination { get; set; }
 
   [Parameter]
-  public int Speed { get; set; } = 500;
+  public double Speed { get; set; } = 60.0; // Duration in seconds (matching demo)
 
   [Parameter]
-  public CubicBezier EasingX { get; set; } = CubicBezier.EaseInOut;
+  public CubicBezier EasingX { get; set; } = CubicBezier.CartX;
 
   [Parameter]
-  public CubicBezier EasingY { get; set; } = CubicBezier.EaseInOut;
+  public CubicBezier EasingY { get; set; } = CubicBezier.CartY;
 
   [Parameter]
-  public CubicBezier EasingScale { get; set; } = CubicBezier.EaseInOut;
+  public CubicBezier EasingScale { get; set; } = CubicBezier.CartScale;
 
   [Parameter]
   public RenderFragment? ChildContent { get; set; }
+
+  [Parameter]
+  public EventCallback OnAnimationComplete { get; set; }
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -47,6 +50,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
         .ConfigureAwait(false);
 
       await _module.InvokeVoidAsync("initialize", _triggerRef, Destination, _dotNetRef);
+
       _isInitialized = true;
     }
   }
@@ -63,8 +67,19 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       Speed,
       EasingX.ToCssString(),
       EasingY.ToCssString(),
-      EasingScale.ToCssString()
+      EasingScale.ToCssString(),
+      _dotNetRef
     );
+  }
+
+  [JSInvokable]
+  public async Task OnAnimationCompleted()
+  {
+    // This is called from JavaScript when animation completes
+    if (OnAnimationComplete.HasDelegate)
+    {
+      await OnAnimationComplete.InvokeAsync();
+    }
   }
 
   public async ValueTask DisposeAsync()
@@ -74,6 +89,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       await _module.InvokeVoidAsync("cleanup", _triggerRef);
       await _module.DisposeAsync();
     }
+
     _dotNetRef?.Dispose();
   }
 }

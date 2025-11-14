@@ -1,0 +1,103 @@
+@page "/random-destinations"
+@using BlazorFastAddToCart
+@using System.Linq
+
+<PageTitle>Random Destinations - BlazorFastAddToCart</PageTitle>
+
+<div class="page-header">
+    <h1>Random Destinations</h1>
+    <p class="page-subtitle">Watch items fly to destinations placed randomly across the page</p>
+</div>
+
+<!-- Random Destinations -->
+@foreach (var dest in destinations)
+{
+    <div class="random-destination" style="left: @($"{dest.X}%"); top: @($"{dest.Y}%")" id="@dest.Id">
+        <span class="destination-icon">@dest.Icon</span>
+        <span class="destination-count">@dest.Count</span>
+    </div>
+}
+
+<!-- Source Items -->
+<section class="demo-section">
+    <h2>Click any item to send it to a random destination</h2>
+    <div class="items-grid">
+        @for (int i = 1; i <= 12; i++)
+        {
+            var itemIndex = i;
+            <div class="item-card">
+                <AddToCart Destination="@GetRandomDestination(itemIndex)" OnAnimationComplete="() => HandleDestinationComplete(itemIndex)">
+                    <div class="item-content">
+                        <div class="item-icon">@GetRandomIcon(itemIndex)</div>
+                        <span>Item @i</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private readonly List<DestinationInfo> destinations = new();
+    private readonly Dictionary<int, string> itemDestinations = new();
+    private readonly Random random = new();
+
+    protected override void OnInitialized()
+    {
+        // Create 6 random destinations
+        var icons = new[] { "🎯", "⭐", "💎", "🔥", "💫", "🎪" };
+        for (int i = 0; i < 6; i++)
+        {
+            destinations.Add(new DestinationInfo
+            {
+                Id = $"dest-{i}",
+                X = random.Next(10, 90),
+                Y = random.Next(10, 80),
+                Icon = icons[i],
+                Count = 0
+            });
+        }
+    }
+
+    private string GetRandomDestination(int itemIndex)
+    {
+        // Store destination for this item so we can track it later
+        if (!itemDestinations.ContainsKey(itemIndex))
+        {
+            var dest = destinations[random.Next(destinations.Count)];
+            itemDestinations[itemIndex] = dest.Id;
+        }
+        return $"#{itemDestinations[itemIndex]}";
+    }
+
+    private string GetRandomIcon(int itemIndex)
+    {
+        // Use itemIndex as seed for consistent icon per item
+        var icons = new[] { "📦", "🎁", "🎈", "🎨", "🚀", "🌟", "💝", "🎭" };
+        var iconIndex = (itemIndex - 1) % icons.Length;
+        return icons[iconIndex];
+    }
+
+    private void HandleDestinationComplete(int itemIndex)
+    {
+        // Increment the destination that was used for this item
+        if (itemDestinations.TryGetValue(itemIndex, out var destId))
+        {
+            var dest = destinations.FirstOrDefault(d => d.Id == destId);
+            if (dest != null)
+            {
+                dest.Count++;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private class DestinationInfo
+    {
+        public string Id { get; set; } = default!;
+        public int X { get; set; }
+        public int Y { get; set; }
+        public string Icon { get; set; } = default!;
+        public int Count { get; set; }
+    }
+}

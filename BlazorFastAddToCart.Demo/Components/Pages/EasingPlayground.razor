@@ -1,0 +1,253 @@
+@page "/easing-playground"
+@using BlazorFastAddToCart
+
+<PageTitle>Easing Playground - BlazorFastAddToCart</PageTitle>
+
+<div class="page-header">
+    <h1>Easing Playground</h1>
+    <p class="page-subtitle">Test all built-in easing functions and see how they affect the animation</p>
+</div>
+
+<!-- Destination -->
+<div class="cart-container">
+    <div class="cart" id="easing-destination">
+        <span class="cart-icon">🎯</span>
+        <span class="cart-count">@itemCount</span>
+    </div>
+</div>
+
+<!-- Controls -->
+<section class="demo-section">
+    <h2>Animation Controls</h2>
+    <div class="controls-grid">
+        <div class="control-group">
+            <label>
+                Speed (seconds):
+                <input type="range" min="0.3" max="2" step="0.1" @bind="speed" @bind:event="oninput" />
+                <span>@speed.ToString("F1")s</span>
+            </label>
+        </div>
+    </div>
+</section>
+
+<!-- Easing Categories -->
+<section class="demo-section">
+    <h2>Standard Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in standardEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Quad Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in quadEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Cubic Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in cubicEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Quart Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in quartEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Quint Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in quintEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Bouncy/Elastic Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in bouncyEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Custom Cart Easing Functions</h2>
+    <div class="easing-grid">
+        @foreach (var easing in cartEasings)
+        {
+            <div class="easing-card">
+                <h3>@easing.Name</h3>
+                <p class="easing-values">@easing.Bezier.ToCssString()</p>
+                <AddToCart Destination="#easing-destination" Speed="@speed" 
+                           EasingX="@easing.Bezier" 
+                           EasingY="@easing.Bezier" 
+                           EasingScale="@easing.Bezier"
+                           OnAnimationComplete="HandleAdd">
+                    <div class="easing-trigger">
+                        <div class="easing-icon">✨</div>
+                        <span>Try @easing.Name</span>
+                    </div>
+                </AddToCart>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private int itemCount = 0;
+    private double speed = 0.8;
+
+    private readonly List<EasingInfo> standardEasings = new()
+    {
+        new("Linear", CubicBezier.Linear),
+        new("Ease", CubicBezier.Ease),
+        new("EaseIn", CubicBezier.EaseIn),
+        new("EaseOut", CubicBezier.EaseOut),
+        new("EaseInOut", CubicBezier.EaseInOut)
+    };
+
+    private readonly List<EasingInfo> quadEasings = new()
+    {
+        new("EaseInQuad", CubicBezier.EaseInQuad),
+        new("EaseOutQuad", CubicBezier.EaseOutQuad),
+        new("EaseInOutQuad", CubicBezier.EaseInOutQuad)
+    };
+
+    private readonly List<EasingInfo> cubicEasings = new()
+    {
+        new("EaseInCubic", CubicBezier.EaseInCubic),
+        new("EaseOutCubic", CubicBezier.EaseOutCubic),
+        new("EaseInOutCubic", CubicBezier.EaseInOutCubic)
+    };
+
+    private readonly List<EasingInfo> quartEasings = new()
+    {
+        new("EaseInQuart", CubicBezier.EaseInQuart),
+        new("EaseOutQuart", CubicBezier.EaseOutQuart),
+        new("EaseInOutQuart", CubicBezier.EaseInOutQuart)
+    };
+
+    private readonly List<EasingInfo> quintEasings = new()
+    {
+        new("EaseInQuint", CubicBezier.EaseInQuint),
+        new("EaseOutQuint", CubicBezier.EaseOutQuint),
+        new("EaseInOutQuint", CubicBezier.EaseInOutQuint)
+    };
+
+    private readonly List<EasingInfo> bouncyEasings = new()
+    {
+        new("EaseInBack", CubicBezier.EaseInBack),
+        new("EaseOutBack", CubicBezier.EaseOutBack),
+        new("EaseInOutBack", CubicBezier.EaseInOutBack)
+    };
+
+    private readonly List<EasingInfo> cartEasings = new()
+    {
+        new("CartX", CubicBezier.CartX),
+        new("CartY", CubicBezier.CartY),
+        new("CartScale", CubicBezier.CartScale)
+    };
+
+    private void HandleAdd() => itemCount++;
+
+    private record EasingInfo(string Name, CubicBezier Bezier);
+}

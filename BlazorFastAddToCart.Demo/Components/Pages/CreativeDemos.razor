@@ -1,0 +1,444 @@
+@page "/creative-demos"
+@using BlazorFastAddToCart
+
+<PageTitle>Creative Demos - BlazorFastAddToCart</PageTitle>
+
+<div class="page-header">
+    <h1>Creative Demos</h1>
+    <p class="page-subtitle">Explore epic non-ecommerce use cases for this animation effect</p>
+</div>
+
+<!-- Star Collector Demo -->
+<section class="demo-section creative-demo">
+    <h2>⭐ Star Collector</h2>
+    <p>Click stars to collect them! Watch them disappear and reappear.</p>
+    
+    <div class="star-collector-container">
+        <div class="collection-box" id="star-collection">
+            <div class="collection-header">⭐ Collection</div>
+            <div class="collection-count">@starCount stars</div>
+            <div class="collection-glow" style="opacity: @(starCount > 0 ? "1" : "0")"></div>
+        </div>
+        
+        <div class="stars-field">
+            @foreach (var star in stars)
+            {
+                @if (star.Visible)
+                {
+                    <AddToCart Destination="#star-collection" OnAnimationComplete="() => CollectStar(star.Id)">
+                        <div class="star-item" style="--delay: @($"{star.Delay}s")">
+                            <span class="star-emoji">⭐</span>
+                            <span class="star-glow"></span>
+                        </div>
+                    </AddToCart>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Message Sender Demo -->
+<section class="demo-section creative-demo">
+    <h2>💬 Message Sender</h2>
+    <p>Send messages flying to the inbox! Messages disappear as they're sent.</p>
+    
+    <div class="message-container">
+        <div class="inbox" id="message-inbox">
+            <div class="inbox-header">📬 Inbox</div>
+            <div class="inbox-count">@messageCount messages</div>
+            @if (messageCount > 0)
+            {
+                <div class="inbox-notification">New!</div>
+            }
+        </div>
+        
+        <div class="messages-list">
+            @foreach (var msg in messages)
+            {
+                @if (msg.Visible)
+                {
+                    <AddToCart Destination="#message-inbox" OnAnimationComplete="() => SendMessage(msg.Id)">
+                        <div class="message-bubble" style="--hue: @msg.Hue">
+                            <div class="message-icon">@msg.Icon</div>
+                            <div class="message-text">@msg.Text</div>
+                        </div>
+                    </AddToCart>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Energy Transfer Demo -->
+<section class="demo-section creative-demo">
+    <h2>⚡ Energy Transfer</h2>
+    <p>Transfer energy from sources to charge the battery! Sources deplete as you use them.</p>
+    
+    <div class="energy-container">
+        <div class="battery-wrapper">
+            <div class="battery" id="energy-battery">
+                <div class="battery-level" style="height: @($"{Math.Min(batteryLevel, 100)}%")"></div>
+                <div class="battery-text">@batteryLevel%</div>
+                <div class="battery-glow" style="opacity: @(batteryLevel > 50 ? "0.6" : "0")"></div>
+            </div>
+            @if (batteryLevel >= 100)
+            {
+                <div class="battery-full-indicator">FULLY CHARGED!</div>
+            }
+        </div>
+        
+        <div class="energy-sources">
+            @foreach (var source in energySources)
+            {
+                @if (source.Energy > 0)
+                {
+                    <AddToCart Destination="#energy-battery" OnAnimationComplete="() => TransferEnergy(source.Id)">
+                        <div class="energy-source" style="--energy: @source.Energy%">
+                            <div class="energy-icon">⚡</div>
+                            <div class="energy-bar">
+                                <div class="energy-fill" style="width: @source.Energy%"></div>
+                            </div>
+                            <div class="energy-value">@source.Energy%</div>
+                        </div>
+                    </AddToCart>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Particle Effect Demo -->
+<section class="demo-section creative-demo">
+    <h2>✨ Particle Collector</h2>
+    <p>Gather particles at the center! Particles disappear and new ones spawn.</p>
+    
+    <div class="particle-container">
+        <div class="particle-center" id="particle-center">
+            <div class="particle-count">@particleCount</div>
+            <div class="particle-rings">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <div class="particle-ring" style="--ring-index: @i; opacity: @(particleCount > i * 10 ? "0.3" : "0")"></div>
+                }
+            </div>
+        </div>
+        
+        <div class="particles-field">
+            @foreach (var particle in particles)
+            {
+                @if (particle.Visible)
+                {
+                    <AddToCart Destination="#particle-center" OnAnimationComplete="() => CollectParticle(particle.Id)">
+                        <div class="particle" style="--delay: @($"{particle.Delay}s"); --hue: @particle.Hue">
+                            ✨
+                        </div>
+                    </AddToCart>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Coin Collector Demo -->
+<section class="demo-section creative-demo">
+    <h2>🪙 Coin Collector</h2>
+    <p>Collect coins to build your treasure! Coins spin and disappear when collected.</p>
+    
+    <div class="coin-container">
+        <div class="treasure-chest" id="treasure-chest">
+            <div class="chest-lid" style="transform: rotateX(@(coinCount > 0 ? "-45deg" : "0deg"))"></div>
+            <div class="chest-body">
+                <div class="chest-count">@coinCount</div>
+                <div class="chest-glow" style="opacity: @(coinCount > 0 ? Math.Min(coinCount / 50.0, 1).ToString("F2") : "0")"></div>
+            </div>
+        </div>
+        
+        <div class="coins-field">
+            @foreach (var coin in coins)
+            {
+                @if (coin.Visible)
+                {
+                    <AddToCart Destination="#treasure-chest" OnAnimationComplete="() => CollectCoin(coin.Id)">
+                        <div class="coin-item" style="--rotation: @($"{coin.Rotation}deg")">
+                            🪙
+                        </div>
+                    </AddToCart>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Heart Collector Demo -->
+<section class="demo-section creative-demo">
+    <h2>❤️ Heart Collector</h2>
+    <p>Collect hearts to fill your love meter! Hearts pulse and fade when collected.</p>
+    
+    <div class="heart-container">
+        <div class="love-meter" id="love-meter">
+            <div class="meter-header">💕 Love Meter</div>
+            <div class="meter-bar">
+                <div class="meter-fill" style="width: @($"{Math.Min(heartCount * 10, 100)}%")"></div>
+            </div>
+            <div class="meter-count">@heartCount / 10</div>
+            @if (heartCount >= 10)
+            {
+                <div class="meter-full">💖 FULL OF LOVE! 💖</div>
+            }
+        </div>
+        
+        <div class="hearts-field">
+            @foreach (var heart in hearts)
+            {
+                @if (heart.Visible)
+                {
+                    <AddToCart Destination="#love-meter" OnAnimationComplete="() => CollectHeart(heart.Id)">
+                        <div class="heart-item" style="--delay: @($"{heart.Delay}s")">
+                            ❤️
+                        </div>
+                    </AddToCart>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private int starCount = 0;
+    private int messageCount = 0;
+    private int batteryLevel = 0;
+    private int particleCount = 0;
+    private int coinCount = 0;
+    private int heartCount = 0;
+
+    private readonly List<StarInfo> stars = new();
+    private readonly List<MessageInfo> messages = new();
+    private readonly List<EnergySource> energySources = new();
+    private readonly List<ParticleInfo> particles = new();
+    private readonly List<CoinInfo> coins = new();
+    private readonly List<HeartInfo> hearts = new();
+
+    protected override void OnInitialized()
+    {
+        // Initialize stars
+        for (int i = 0; i < 25; i++)
+        {
+            stars.Add(new StarInfo { Id = i, Visible = true, Delay = i * 0.1 });
+        }
+
+        // Initialize messages
+        var messageData = new[]
+        {
+            ("💌", "Hello!", 0),
+            ("🎉", "Congratulations!", 20),
+            ("❤️", "Love this!", 40),
+            ("🚀", "Amazing!", 60),
+            ("⭐", "Great job!", 80),
+            ("🎁", "Surprise!", 100),
+            ("🔥", "Hot stuff!", 120),
+            ("💎", "Precious!", 140),
+            ("🎨", "Creative!", 160),
+            ("🌟", "Stellar!", 180)
+        };
+        
+        for (int i = 0; i < messageData.Length; i++)
+        {
+            messages.Add(new MessageInfo
+            {
+                Id = i,
+                Icon = messageData[i].Item1,
+                Text = messageData[i].Item2,
+                Visible = true,
+                Hue = messageData[i].Item3
+            });
+        }
+
+        // Initialize energy sources
+        for (int i = 0; i < 12; i++)
+        {
+            energySources.Add(new EnergySource { Id = i, Energy = 100 });
+        }
+
+        // Initialize particles
+        var random = new Random();
+        for (int i = 0; i < 40; i++)
+        {
+            particles.Add(new ParticleInfo
+            {
+                Id = i,
+                Visible = true,
+                Delay = i * 0.05,
+                Hue = random.Next(0, 360)
+            });
+        }
+
+        // Initialize coins
+        for (int i = 0; i < 30; i++)
+        {
+            coins.Add(new CoinInfo { Id = i, Visible = true, Rotation = i * 12 });
+        }
+
+        // Initialize hearts
+        for (int i = 0; i < 20; i++)
+        {
+            hearts.Add(new HeartInfo { Id = i, Visible = true, Delay = i * 0.1 });
+        }
+    }
+
+    private void CollectStar(int id)
+    {
+        starCount++;
+        var star = stars.FirstOrDefault(s => s.Id == id);
+        if (star != null)
+        {
+            star.Visible = false;
+            // Respawn after delay
+            Task.Delay(2000).ContinueWith(_ =>
+            {
+                star.Visible = true;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        StateHasChanged();
+    }
+
+    private void SendMessage(int id)
+    {
+        messageCount++;
+        var msg = messages.FirstOrDefault(m => m.Id == id);
+        if (msg != null)
+        {
+            msg.Visible = false;
+            // Respawn after delay
+            Task.Delay(3000).ContinueWith(_ =>
+            {
+                msg.Visible = true;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        StateHasChanged();
+    }
+
+    private void TransferEnergy(int id)
+    {
+        var source = energySources.FirstOrDefault(s => s.Id == id);
+        if (source != null && source.Energy > 0)
+        {
+            var transferAmount = Math.Min(15, source.Energy);
+            source.Energy -= transferAmount;
+            batteryLevel = Math.Min(batteryLevel + transferAmount, 100);
+            
+            // Recharge source after depletion
+            if (source.Energy <= 0)
+            {
+                Task.Delay(5000).ContinueWith(_ =>
+                {
+                    source.Energy = 100;
+                    InvokeAsync(StateHasChanged);
+                });
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void CollectParticle(int id)
+    {
+        particleCount++;
+        var particle = particles.FirstOrDefault(p => p.Id == id);
+        if (particle != null)
+        {
+            particle.Visible = false;
+            // Respawn with new hue
+            var random = new Random();
+            Task.Delay(1500).ContinueWith(_ =>
+            {
+                particle.Visible = true;
+                particle.Hue = random.Next(0, 360);
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        StateHasChanged();
+    }
+
+    private void CollectCoin(int id)
+    {
+        coinCount++;
+        var coin = coins.FirstOrDefault(c => c.Id == id);
+        if (coin != null)
+        {
+            coin.Visible = false;
+            // Respawn after delay
+            Task.Delay(2500).ContinueWith(_ =>
+            {
+                coin.Visible = true;
+                coin.Rotation = new Random().Next(0, 360);
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        StateHasChanged();
+    }
+
+    private void CollectHeart(int id)
+    {
+        if (heartCount < 10)
+        {
+            heartCount++;
+        }
+        var heart = hearts.FirstOrDefault(h => h.Id == id);
+        if (heart != null)
+        {
+            heart.Visible = false;
+            // Respawn after delay
+            Task.Delay(2000).ContinueWith(_ =>
+            {
+                heart.Visible = true;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        StateHasChanged();
+    }
+
+    private class StarInfo
+    {
+        public int Id { get; set; }
+        public bool Visible { get; set; }
+        public double Delay { get; set; }
+    }
+
+    private class MessageInfo
+    {
+        public int Id { get; set; }
+        public string Icon { get; set; } = default!;
+        public string Text { get; set; } = default!;
+        public bool Visible { get; set; }
+        public int Hue { get; set; }
+    }
+
+    private class EnergySource
+    {
+        public int Id { get; set; }
+        public int Energy { get; set; }
+    }
+
+    private class ParticleInfo
+    {
+        public int Id { get; set; }
+        public bool Visible { get; set; }
+        public double Delay { get; set; }
+        public int Hue { get; set; }
+    }
+
+    private class CoinInfo
+    {
+        public int Id { get; set; }
+        public bool Visible { get; set; }
+        public int Rotation { get; set; }
+    }
+
+    private class HeartInfo
+    {
+        public int Id { get; set; }
+        public bool Visible { get; set; }
+        public double Delay { get; set; }
+    }
+}
