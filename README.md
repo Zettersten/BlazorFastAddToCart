@@ -13,6 +13,9 @@ A high-performance Blazor component that animates items flying into a shopping c
 
 - **High Performance**: Zero-allocation cubic bezier easing, optimized for AOT compilation
 - **Customizable Animations**: Independent easing functions for X, Y, and scale transformations
+- **Multiple Items**: Animate multiple items with staggered timing using the `Count` parameter
+- **Custom Triggers**: Specify which element triggers the animation with the `Trigger` parameter
+- **Progress Tracking**: Track animation progress in real-time with `OnAnimationProgress`
 - **Accessibility**: Respects `prefers-reduced-motion` and provides fallback feedback
 - **Concurrent Animations**: Supports multiple simultaneous animations without conflicts
 - **Flexible Content**: Works with images, buttons, divs, or any HTML content
@@ -162,7 +165,7 @@ Easing function for scale transformation. Controls how the item scales down duri
 **Type**: `EventCallback`  
 **Default**: `null`
 
-Callback invoked when the animation completes. Use this to update cart counts, make API calls, or perform other actions.
+Callback invoked when the animation completes. Use this to update cart counts, make API calls, or perform other actions. When using `Count > 1`, this callback fires only once after all animations complete.
 
 ```razor
 <AddToCart Destination="#cart" OnAnimationComplete="HandleAddToCart">
@@ -175,6 +178,84 @@ Callback invoked when the animation completes. Use this to update cart counts, m
         cartCount++;
         await AddItemToCartAsync(productId);
         StateHasChanged();
+    }
+}
+```
+
+### `Count`
+
+**Type**: `int`  
+**Default**: `1`
+
+Number of items to animate. When set to a value greater than 1, multiple animations will be triggered with staggered timing. All animations complete before `OnAnimationComplete` fires once.
+
+```razor
+<!-- Add 10 items with staggered animations -->
+<AddToCart Destination="#cart" Count="10" OnAnimationComplete="HandleBulkAdd">
+    <button>Add 10 Items</button>
+</AddToCart>
+
+@code {
+    private void HandleBulkAdd()
+    {
+        // This fires once after all 10 animations complete
+        cartCount += 10;
+    }
+}
+```
+
+### `Trigger`
+
+**Type**: `string?`  
+**Default**: `null`
+
+CSS selector for the specific element that should trigger the animation. When provided, only clicks on the matching element will trigger the animation. Useful when you want to animate a specific part of your content (like a button) rather than the entire wrapped content.
+
+```razor
+<AddToCart Destination="#cart" Trigger=".add-to-cart-btn">
+    <div class="product-card">
+        <img src="product.jpg" />
+        <h3>Product Name</h3>
+        <!-- Only clicking this button triggers animation -->
+        <button class="add-to-cart-btn">Add to Cart</button>
+    </div>
+</AddToCart>
+```
+
+The selector can be:
+- A class selector: `".add-to-cart-btn"`
+- An ID selector: `"#product-button"`
+- Any valid CSS selector: `"button[type='submit']"`
+
+If `null`, the entire wrapped content acts as the trigger.
+
+### `OnAnimationProgress`
+
+**Type**: `EventCallback<double>`  
+**Default**: `null`
+
+Callback invoked during animation to report progress. Progress ranges from `0.0` (start) to `1.0` (complete). Updates are throttled to reduce callback frequency. When using `Count > 1`, progress represents the overall progress across all animations.
+
+```razor
+<AddToCart Destination="#cart" 
+           Count="5"
+           OnAnimationProgress="HandleProgress"
+           OnAnimationComplete="HandleComplete">
+    <button>Add Items</button>
+</AddToCart>
+
+@code {
+    private double progress = 0.0;
+
+    private void HandleProgress(double progressValue)
+    {
+        progress = progressValue; // 0.0 to 1.0
+        StateHasChanged();
+    }
+
+    private void HandleComplete()
+    {
+        progress = 0.0; // Reset for next animation
     }
 }
 ```
@@ -482,6 +563,100 @@ else
 </AddToCart>
 ```
 
+### Example 11: Multiple Items with Count
+
+```razor
+<AddToCart Destination="#cart" Count="10" OnAnimationComplete="HandleBulkAdd">
+    <button class="btn-primary">Add 10 Items</button>
+</AddToCart>
+
+@code {
+    private void HandleBulkAdd()
+    {
+        // Fires once after all 10 animations complete
+        cartCount += 10;
+        StateHasChanged();
+    }
+}
+```
+
+### Example 12: Custom Trigger Element
+
+```razor
+<AddToCart Destination="#cart" Trigger=".add-to-cart-btn">
+    <div class="product-card">
+        <img src="product.jpg" />
+        <h3>Product Name</h3>
+        <p>$99.99</p>
+        <!-- Only this button triggers the animation -->
+        <button class="add-to-cart-btn">Add to Cart</button>
+    </div>
+</AddToCart>
+```
+
+### Example 13: Progress Tracking
+
+```razor
+<AddToCart Destination="#cart" 
+           Count="5"
+           OnAnimationProgress="UpdateProgress"
+           OnAnimationComplete="HandleComplete">
+    <button>Add 5 Items</button>
+</AddToCart>
+
+<div class="progress-bar">
+    <div class="progress-fill" style="width: @($"{progress * 100}%")"></div>
+</div>
+
+@code {
+    private double progress = 0.0;
+
+    private void UpdateProgress(double progressValue)
+    {
+        progress = progressValue; // 0.0 to 1.0
+        StateHasChanged();
+    }
+
+    private void HandleComplete()
+    {
+        progress = 0.0;
+        StateHasChanged();
+    }
+}
+```
+
+### Example 14: Combining All Features
+
+```razor
+<AddToCart Destination="#cart" 
+           Count="@quantity"
+           Trigger=".add-to-cart-btn"
+           Speed="0.8"
+           OnAnimationProgress="HandleProgress"
+           OnAnimationComplete="HandleComplete">
+    <div class="product-card">
+        <img src="@product.ImageUrl" />
+        <h3>@product.Name</h3>
+        <p>$@product.Price</p>
+        <button class="add-to-cart-btn">Add @quantity to Cart</button>
+    </div>
+</AddToCart>
+
+@code {
+    private int quantity = 5;
+    private double progress = 0.0;
+
+    private void HandleProgress(double p) => progress = p;
+    
+    private async Task HandleComplete()
+    {
+        await cartService.AddItemsAsync(productId, quantity);
+        progress = 0.0;
+        StateHasChanged();
+    }
+}
+```
+
 ## 🎯 Advanced Usage
 
 ### Handling Multiple Rapid Clicks
@@ -589,7 +764,10 @@ dotnet test
 | `EasingX` | `CubicBezier` | No | `CubicBezier.CartX` | Horizontal movement easing |
 | `EasingY` | `CubicBezier` | No | `CubicBezier.CartY` | Vertical movement easing |
 | `EasingScale` | `CubicBezier` | No | `CubicBezier.CartScale` | Scale transformation easing |
-| `OnAnimationComplete` | `EventCallback` | No | `null` | Callback when animation completes |
+| `OnAnimationComplete` | `EventCallback` | No | `null` | Callback when animation completes (fires once for multiple animations) |
+| `Count` | `int` | No | `1` | Number of items to animate with staggered timing |
+| `Trigger` | `string?` | No | `null` | CSS selector for specific trigger element |
+| `OnAnimationProgress` | `EventCallback<double>` | No | `null` | Callback for progress updates (0.0 to 1.0) |
 | `ChildContent` | `RenderFragment` | No | `null` | Content to animate |
 
 ### `CubicBezier` Struct
