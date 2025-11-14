@@ -23,7 +23,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   public string Destination { get; set; }
 
   [Parameter]
-  public double Speed { get; set; } = 60.0; // Duration in seconds (matching demo)
+  public double Speed { get; set; } = 0.6; // Duration in seconds
 
   [Parameter]
   public CubicBezier EasingX { get; set; } = CubicBezier.CartX;

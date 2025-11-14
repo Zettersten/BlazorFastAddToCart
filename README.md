@@ -103,7 +103,7 @@ CSS selector for the destination element where the animation should end. Can be 
 ### `Speed`
 
 **Type**: `double`  
-**Default**: `60.0`
+**Default**: `0.6`
 
 Animation duration in seconds. Lower values = faster animation.
 
@@ -119,7 +119,7 @@ Animation duration in seconds. Lower values = faster animation.
 </AddToCart>
 ```
 
-**Note**: The default value of `60.0` seconds matches the original demo behavior. For typical e-commerce use cases, values between `0.5` and `1.5` seconds work best.
+**Note**: The default value of `0.6` seconds provides a smooth, fast animation. For typical e-commerce use cases, values between `0.5` and `1.5` seconds work best.
 
 ### `EasingX`
 
@@ -760,7 +760,7 @@ dotnet test
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `Destination` | `string` | Yes | - | CSS selector for animation destination |
-| `Speed` | `double` | No | `60.0` | Animation duration in seconds |
+| `Speed` | `double` | No | `0.6` | Animation duration in seconds |
 | `EasingX` | `CubicBezier` | No | `CubicBezier.CartX` | Horizontal movement easing |
 | `EasingY` | `CubicBezier` | No | `CubicBezier.CartY` | Vertical movement easing |
 | `EasingScale` | `CubicBezier` | No | `CubicBezier.CartScale` | Scale transformation easing |

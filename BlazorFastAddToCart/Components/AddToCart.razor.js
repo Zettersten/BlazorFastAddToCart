@@ -461,14 +461,15 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
     element.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
     element.style.opacity = currentOpacity;
     
-    // Update this animation's progress
-    animationProgress = progress;
-    
     // Report progress (throttle updates to avoid excessive calls)
     if (progressTracker && dotNetRef) {
       // Calculate overall progress: average of all animation progresses
       // Update the sum: subtract old progress, add new progress
-      progressTracker.progressSum = progressTracker.progressSum - animationProgress + progress;
+      // IMPORTANT: Calculate delta before updating animationProgress
+      const delta = progress - animationProgress;
+      progressTracker.progressSum += delta;
+      animationProgress = progress; // Update after calculating delta
+      
       const overallProgress = progressTracker.progressSum / progressTracker.total;
       
       // Only report if progress changed significantly (reduce callback frequency)
@@ -477,6 +478,9 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
         dotNetRef.invokeMethodAsync('OnAnimationProgressUpdate', Math.min(overallProgress, 1.0))
           .catch(() => { /* Ignore errors if method doesn't exist */ });
       }
+    } else {
+      // Update animationProgress even if no tracker (for consistency)
+      animationProgress = progress;
     }
     
     if (progress < 1) {
@@ -491,7 +495,10 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
       // Update progress tracker
       if (progressTracker) {
         // Update progress sum: this animation is now complete (progress = 1)
-        progressTracker.progressSum = progressTracker.progressSum - animationProgress + 1.0;
+        // Calculate final delta before updating
+        const finalDelta = 1.0 - animationProgress;
+        progressTracker.progressSum += finalDelta;
+        animationProgress = 1.0;
         progressTracker.completed++;
         
         // Report final progress
