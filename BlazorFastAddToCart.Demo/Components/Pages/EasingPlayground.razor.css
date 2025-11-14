@@ -1,3 +1,51 @@
+/* Cart Container Styling */
+.cart-container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+}
+
+.cart {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.cart:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.cart-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.cart-count {
+  background: white;
+  color: #667eea;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  min-width: 28px;
+}
+
 .controls-grid {
   display: grid;
   gap: 1rem;
@@ -115,6 +163,17 @@
 }
 
 @media (max-width: 768px) {
+  .cart-container {
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .cart {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    min-width: 100px;
+  }
+
   .easing-grid {
     grid-template-columns: 1fr;
   }
