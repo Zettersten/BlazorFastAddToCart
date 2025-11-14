@@ -173,11 +173,7 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
       
       // Notify .NET that animation completed
       if (dotNetRef) {
-        try {
-          await dotNetRef.invokeMethodAsync('OnAnimationCompleted');
-        } catch (e) {
-          // Ignore errors if method doesn't exist
-        }
+        dotNetRef.invokeMethodAsync('OnAnimationCompleted').catch(() => { /* Ignore errors if method doesn't exist */ });
       }
     }
   };

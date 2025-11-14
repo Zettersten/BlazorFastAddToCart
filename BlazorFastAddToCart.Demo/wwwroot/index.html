@@ -7,18 +7,18 @@
   <title>BlazorFastAddToCart Demo</title>
   <base href="/" />
   <link rel="stylesheet" href="css/app.css" />
-  <link rel="stylesheet" href="css/player-styles.css" />
-  <link href="BlazorFastTypewriter.Demo.styles.css" rel="stylesheet" />
+  <link href="BlazorFastAddToCart.Demo.styles.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
 
   <!-- GitHub Pages SPA routing support -->
-  <script>(function() {
-            var redirect = sessionStorage.redirect;
-            delete sessionStorage.redirect;
-            if (redirect && redirect != location.href) {
-                history.replaceState(null, null, redirect);
-            }
-        })();</script>
+  <script>
+    (function () {
+      var redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect != location.href) {
+        history.replaceState(null, null, redirect);
+      }
+    })();</script>
 </head>
 
 <body>
