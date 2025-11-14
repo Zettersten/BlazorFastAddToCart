@@ -1,0 +1,87 @@
+@page "/"
+@using BlazorFastTypewriter
+
+<PageTitle>BlazorFastTypewriter</PageTitle>
+
+<div class="hero">
+    <h1>BlazorFastTypewriter</h1>
+    <p class="subtitle">A high-performance Blazor component for character-by-character text animation</p>
+</div>
+
+<section class="demo-section">
+    <h2>Live Demo</h2>
+    <div class="demo-box">
+        <Typewriter @ref="_heroTypewriter"
+                    Autostart="true"
+                    Speed="80">
+            <p>This is a <strong>simple example</strong> of the typewriter component. It types character by character, preserving <em>formatting</em> and <a href="#">links</a>. Perfect for interactive storytelling, tutorials, chat simulations, and dynamic content.</p>
+        </Typewriter>
+    </div>
+</section>
+
+<section class="demo-section">
+    <h2>Installation</h2>
+    
+    <CodeSample>
+        <pre><code class="language-bash">dotnet add package BlazorFastTypewriter</code></pre>
+    </CodeSample>
+    
+    <p style="margin-top: 1rem;">Add the namespace to your <code>_Imports.razor</code>:</p>
+    
+    <CodeSample>
+        <pre><code class="language-csharp">@@using BlazorFastTypewriter</code></pre>
+    </CodeSample>
+</section>
+
+<section class="demo-section">
+    <h2>Basic Usage</h2>
+    
+    <div class="player-container">
+        <div class="demo-box">
+            <Typewriter @ref="_basicTypewriter"
+                        Autostart="false"
+                        Speed="60"
+                        OnProgress="@((p) => _basicProgress = new(p.Current, p.Total, p.Percent, 0))">
+                <p>Click the play button to begin the animation!</p>
+            </Typewriter>
+        </div>
+        
+        <TypewriterControls 
+            Overlay="true"
+            IsRunning="_basicRunning"
+            IsPaused="_basicPaused"
+            Progress="_basicProgress"
+            ShowProgress="true"
+            ShowPlayPause="true"
+            ShowReset="true"
+            ShowStop="false"
+            ShowSkipEnd="false"
+            CanPlay="!_basicRunning"
+            CanPause="_basicRunning && !_basicPaused"
+            CanResume="_basicPaused"
+            CanReset="true"
+            OnPlayClick="StartBasic"
+            OnPauseClick="PauseBasic"
+            OnResumeClick="ResumeBasic"
+            OnResetClick="ResetBasic" />
+    </div>
+    
+    <CodeSample>
+        <pre><code class="language-xml">&lt;Typewriter Speed="60" Autostart="false"&gt;
+    &lt;p&gt;Click the Start button to begin the animation!&lt;/p&gt;
+&lt;/Typewriter&gt;</code></pre>
+    </CodeSample>
+</section>
+
+<section class="demo-section features">
+    <h2>Features</h2>
+    <ul>
+        <li><strong>High Performance</strong> — Optimized with modern .NET 10 features</li>
+        <li><strong>HTML Support</strong> — Preserves tags, links, and nested structures</li>
+        <li><strong>Seek & Scrubbing</strong> — Jump to any position in the animation</li>
+        <li><strong>Playback Controls</strong> — Pause, resume, and track progress</li>
+        <li><strong>RTL Support</strong> — Full bidirectional text support</li>
+        <li><strong>Accessible</strong> — ARIA live regions and reduced motion support</li>
+    </ul>
+    <p style="margin-top: 1.5rem;">Explore the demos in the sidebar to see all features in action.</p>
+</section>

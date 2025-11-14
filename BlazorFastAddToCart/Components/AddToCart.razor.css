@@ -1,0 +1,323 @@
+/* AddToCart.Ultimate.razor.css - Production-ready with progressive enhancement */
+
+/* Base trigger styles */
+.add-to-cart-trigger {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Flying element base styles */
+.add-to-cart-flying {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  /* Initial transform using individual properties (Safari 14.1+) */
+  translate: 0 0;
+  scale: 1;
+  opacity: 1;
+  /* Performance optimizations */
+  contain: layout size style paint;
+  content-visibility: auto;
+  will-change: translate, scale, opacity;
+  /* Smooth rendering */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Fallback for browsers without individual transform properties */
+@supports not (translate: 0 0) {
+  .add-to-cart-flying {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* CSS animation fallback for browsers without Web Animations API */
+.add-to-cart-flying.animating {
+  animation: fly-translate var(--duration, 500ms) var(--easing-x, ease-in-out) forwards, fly-scale var(--duration, 500ms) var(--easing-scale, ease-in-out) forwards, fly-fade var(--duration, 500ms) ease-out forwards;
+}
+
+/* Separate animations for independent easing */
+@keyframes fly-translate {
+  to {
+    translate: var(--translate-x, 0) var(--translate-y, 0);
+  }
+}
+
+@keyframes fly-scale {
+  to {
+    scale: 0.2;
+  }
+}
+
+@keyframes fly-fade {
+  0%, 80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Fallback transform animation for older browsers */
+@supports not (translate: 0 0) {
+  @keyframes fly-translate {
+    to {
+      transform: translateX(var(--translate-x, 0)) translateY(var(--translate-y, 0)) scale(0.2);
+    }
+  }
+
+  .add-to-cart-flying.animating {
+    animation: fly-translate var(--duration, 500ms) var(--easing-x, ease-in-out) forwards, fly-fade var(--duration, 500ms) ease-out forwards;
+  }
+}
+
+/* Reduced motion support - critical for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .add-to-cart-flying {
+    display: none !important;
+  }
+
+  /* Provide visual feedback without motion */
+  .cart-ping {
+    animation: cart-pulse 0.2s ease-out;
+  }
+
+  @keyframes cart-pulse {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.1);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .add-to-cart-flying {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .add-to-cart-flying {
+    filter: brightness(0.9);
+  }
+}
+
+/* Modern color support with fallback */
+@supports (color: oklch(0% 0 0)) {
+  .add-to-cart-flying {
+    background-color: oklch(100% 0 0 / 0.95);
+    box-shadow: 0 4px 12px oklch(0% 0 0 / 0.15);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .add-to-cart-flying {
+      background-color: oklch(20% 0 0 / 0.95);
+      box-shadow: 0 4px 12px oklch(0% 0 0 / 0.3);
+    }
+  }
+}
+
+/* Fallback for browsers without oklch */
+@supports not (color: oklch(0% 0 0)) {
+  .add-to-cart-flying {
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .add-to-cart-flying {
+      background-color: rgba(30, 30, 30, 0.95);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+/* Focus styles for keyboard navigation */
+.add-to-cart-trigger:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Active state feedback */
+.add-to-cart-trigger:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+
+/* Hover state (pointer devices only) */
+@media (hover: hover) and (pointer: fine) {
+  .add-to-cart-trigger:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease-out;
+  }
+}
+
+/* Container query for responsive behavior */
+@supports (container-type: inline-size) {
+  .add-to-cart-trigger {
+    container-type: inline-size;
+  }
+
+  @container (width < 400px) {
+    .add-to-cart-flying {
+      scale: 0.8;
+    }
+  }
+}
+
+/* Backdrop filter for visual separation (modern browsers) */
+@supports (backdrop-filter: blur(4px)) {
+  .add-to-cart-flying {
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Grid subgrid support for perfect alignment */
+@supports (grid-template-columns: subgrid) {
+  .add-to-cart-trigger {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+  }
+}
+
+/* Modern aspect-ratio for maintaining proportions */
+@supports (aspect-ratio: 1/1) {
+  .add-to-cart-flying img {
+    aspect-ratio: attr(width) / attr(height);
+    object-fit: contain;
+  }
+}
+
+/* CSS Nesting (modern browsers) */
+@supports (selector(&)) {
+  .add-to-cart-flying {
+    & img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    & > * {
+      pointer-events: none;
+    }
+  }
+}
+
+/* Fallback for browsers without nesting */
+.add-to-cart-flying img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.add-to-cart-flying > * {
+  pointer-events: none;
+}
+
+/* Print styles - hide animations */
+@media print {
+  .add-to-cart-flying {
+    display: none !important;
+  }
+}
+
+/* Forced colors mode (Windows High Contrast) */
+@media (forced-colors: active) {
+  .add-to-cart-flying {
+    border: 1px solid CanvasText;
+    background-color: Canvas;
+  }
+}
+
+/* Light-dark() function for automatic theming (newest feature) */
+@supports (color: light-dark(white, black)) {
+  .add-to-cart-flying {
+    background-color: light-dark( rgb(255 255 255 / 0.95), rgb(30 30 30 / 0.95) );
+  }
+}
+
+/* RTL support using logical properties */
+.add-to-cart-trigger {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  padding-inline: 0;
+}
+
+/* Performance: GPU acceleration hints */
+.add-to-cart-flying {
+  /* Modern containment */
+  contain: layout style paint size;
+  /* Content visibility for better rendering */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+/* Scroll behavior (if parent is scrollable) */
+@supports (overscroll-behavior: contain) {
+  .add-to-cart-flying {
+    overscroll-behavior: contain;
+  }
+}
+
+/* Smooth corners with logical properties */
+.add-to-cart-flying {
+  border-start-start-radius: 8px;
+  border-start-end-radius: 8px;
+  border-end-start-radius: 8px;
+  border-end-end-radius: 8px;
+}
+
+/* Fallback for older border-radius */
+@supports not (border-start-start-radius: 8px) {
+  .add-to-cart-flying {
+    border-radius: 8px;
+  }
+}
+
+/* View Transitions API integration (experimental) */
+@supports (view-transition-name: none) {
+  .add-to-cart-flying {
+    view-transition-name: cart-item;
+  }
+
+  ::view-transition-old(cart-item),
+  ::view-transition-new(cart-item) {
+    animation-duration: var(--duration, 500ms);
+  }
+}
+
+/* Custom scrollbar styling for internal content */
+.add-to-cart-flying::-webkit-scrollbar {
+  display: none;
+}
+
+.add-to-cart-flying {
+  scrollbar-width: none;
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+  .add-to-cart-flying {
+    padding-top: calc(0.5rem + env(safe-area-inset-top));
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    padding-left: calc(0.5rem + env(safe-area-inset-left));
+    padding-right: calc(0.5rem + env(safe-area-inset-right));
+  }
+}
