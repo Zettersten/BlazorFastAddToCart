@@ -12,9 +12,8 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   private DotNetObjectReference<AddToCart>? _dotNetRef;
   private IJSObjectReference? _module;
   private bool _isInitialized;
-  private int _activeAnimations;
-  private int _completedAnimations;
   private long _batchId;
+  private readonly Dictionary<long, BatchTracker> _activeBatches = new();
 
   [Inject]
   private IJSRuntime JS { get; set; } = default!;
@@ -76,8 +75,13 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
     // Start new animation batch with unique ID
     _batchId++;
     var currentBatchId = _batchId;
-    _activeAnimations = Count;
-    _completedAnimations = 0;
+    
+    // Track this batch independently
+    _activeBatches[currentBatchId] = new BatchTracker
+    {
+      ActiveAnimations = Count,
+      CompletedAnimations = 0
+    };
 
     var triggerSelector = Trigger ?? null;
     
@@ -99,19 +103,20 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   [JSInvokable]
   public async Task OnAnimationCompleted(long batchId)
   {
-    // Only process completions for the current batch (ignore stale batches from rapid clicks)
-    if (batchId != _batchId)
-      return;
+    // Find the batch tracker for this batch
+    if (!_activeBatches.TryGetValue(batchId, out var tracker))
+      return; // Batch not found (shouldn't happen, but be safe)
     
-    // Track completion for multiple animations
-    _completedAnimations++;
+    // Track completion for this batch
+    tracker.CompletedAnimations++;
     
-    // Only fire callback when all animations complete
-    if (_completedAnimations >= _activeAnimations)
+    // Fire callback when all animations in this batch complete
+    if (tracker.CompletedAnimations >= tracker.ActiveAnimations)
     {
-      _completedAnimations = 0;
-      _activeAnimations = 0;
+      // Remove batch from tracking
+      _activeBatches.Remove(batchId);
       
+      // Fire callback for this batch
       if (OnAnimationComplete.HasDelegate)
       {
         await OnAnimationComplete.InvokeAsync();
@@ -138,5 +143,11 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
     }
 
     _dotNetRef?.Dispose();
+  }
+
+  private class BatchTracker
+  {
+    public int ActiveAnimations { get; set; }
+    public int CompletedAnimations { get; set; }
   }
 }
