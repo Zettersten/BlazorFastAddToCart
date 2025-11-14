@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RazorLangVersion>latest</RazorLangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    
+
     <!-- Package Configuration -->
     <IsPackable>true</IsPackable>
     <PackageId>BlazorFastAddToCart</PackageId>
@@ -68,9 +68,10 @@
     <None Include="../README.md" Pack="true" PackagePath="/" />
     <None Include="../icon.png" Pack="true" PackagePath="/" Condition="Exists('../icon.png')" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <Content Include="Components\AddToCart.razor.js" />
+    <Content Include="Components/AddToCart.razor.js" />
+    <None Update="Components/AddToCart.razor.css" CssScope="bfatc" />
   </ItemGroup>
   
   <ItemGroup>

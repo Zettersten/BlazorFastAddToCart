@@ -20,7 +20,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   public string Destination { get; set; }
 
   [Parameter]
-  public double Speed { get; set; } = 0.8; // Duration in seconds (matching demo)
+  public double Speed { get; set; } = 60.0; // Duration in seconds (matching demo)
 
   [Parameter]
   public CubicBezier EasingX { get; set; } = CubicBezier.CartX;
@@ -50,6 +50,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
         .ConfigureAwait(false);
 
       await _module.InvokeVoidAsync("initialize", _triggerRef, Destination, _dotNetRef);
+
       _isInitialized = true;
     }
   }
@@ -88,6 +89,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       await _module.InvokeVoidAsync("cleanup", _triggerRef);
       await _module.DisposeAsync();
     }
+
     _dotNetRef?.Dispose();
   }
 }

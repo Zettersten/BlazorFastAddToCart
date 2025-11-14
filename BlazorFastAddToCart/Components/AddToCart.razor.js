@@ -73,6 +73,7 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
   // Create a new element for the item (matching demo code structure)
   const element = document.createElement('div');
   element.className = 'cart-item';
+  element.setAttribute('bfatc', '');
   
   // Position element at the center of the source element
   // We position at top-left, then offset by half width/height to center
