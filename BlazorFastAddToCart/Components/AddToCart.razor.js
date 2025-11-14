@@ -132,15 +132,75 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
   // Handle display: contents - get the actual rendered element
   let sourceElement = triggerElement;
   let productRect = triggerElement.getBoundingClientRect();
+  const triggerDisplay = window.getComputedStyle(triggerElement).display;
   
   // If the trigger has display: contents or zero size, find the first visible child
-  if (productRect.width === 0 || productRect.height === 0 || 
-      window.getComputedStyle(triggerElement).display === 'contents') {
-    const firstChild = triggerElement.firstElementChild;
+  if (productRect.width === 0 || productRect.height === 0 || triggerDisplay === 'contents') {
+    // Try to find the first visible element child (skip text nodes)
+    let firstChild = triggerElement.firstElementChild;
+    
+    // If no element child, try querySelector for common elements
+    if (!firstChild) {
+      firstChild = triggerElement.querySelector('img, div, span, button, a');
+    }
+    
     if (firstChild) {
       sourceElement = firstChild;
       productRect = firstChild.getBoundingClientRect();
+      
+      // Special handling for images - use natural dimensions if bounding rect is zero
+      if ((productRect.width === 0 || productRect.height === 0) && firstChild.tagName === 'IMG') {
+        const img = firstChild;
+        const computedStyle = window.getComputedStyle(img);
+        const computedWidth = parseFloat(computedStyle.width) || 0;
+        const computedHeight = parseFloat(computedStyle.height) || 0;
+        
+        // Try to get dimensions from computed style or natural dimensions
+        if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+          const aspectRatio = img.naturalWidth / img.naturalHeight;
+          let width = computedWidth || img.naturalWidth;
+          let height = computedHeight || img.naturalHeight;
+          
+          // If we have one dimension, calculate the other maintaining aspect ratio
+          if (width > 0 && height === 0) {
+            height = width / aspectRatio;
+          } else if (height > 0 && width === 0) {
+            width = height * aspectRatio;
+          } else if (width === 0 && height === 0) {
+            // Use natural dimensions as fallback
+            width = Math.min(img.naturalWidth, 300);
+            height = width / aspectRatio;
+          }
+          
+          // Create a rect with proper dimensions
+          const imgRect = img.getBoundingClientRect();
+          productRect = {
+            left: imgRect.left || 0,
+            top: imgRect.top || 0,
+            width: width,
+            height: height,
+            right: (imgRect.left || 0) + width,
+            bottom: (imgRect.top || 0) + height
+          };
+        } else if (computedWidth > 0 || computedHeight > 0) {
+          // Use computed dimensions even if image not loaded
+          productRect = {
+            left: productRect.left || 0,
+            top: productRect.top || 0,
+            width: computedWidth || 300,
+            height: computedHeight || 300,
+            right: (productRect.left || 0) + (computedWidth || 300),
+            bottom: (productRect.top || 0) + (computedHeight || 300)
+          };
+        }
+      }
     }
+  }
+  
+  // Validate we have valid dimensions
+  if (productRect.width === 0 || productRect.height === 0) {
+    console.warn('AddToCart: Source element has zero dimensions', sourceElement);
+    return;
   }
 
   // Calculate center points
@@ -182,36 +242,74 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
   element.style.backgroundColor = 'transparent'; // Ensure no background blocks content
 
   // Clone the content from the actual source element
-  // Try to clone innerHTML first to preserve styles, fallback to node cloning
-  if (sourceElement.innerHTML) {
-    element.innerHTML = sourceElement.innerHTML;
-  } else {
-    const fragment = document.createDocumentFragment();
-    const children = sourceElement.childNodes;
-    for (let i = 0, len = children.length; i < len; i++) {
-      const child = children[i];
-      // Only clone element nodes, skip text nodes
-      if (child.nodeType === Node.ELEMENT_NODE) {
-        fragment.appendChild(child.cloneNode(true));
-      }
+  // Special handling for direct image elements
+  if (sourceElement.tagName === 'IMG') {
+    // Clone the image directly with all attributes
+    const clonedImg = sourceElement.cloneNode(true);
+    
+    // Set explicit styles to ensure visibility (using setProperty to avoid cssText issues)
+    clonedImg.style.setProperty('width', '100%', 'important');
+    clonedImg.style.setProperty('height', '100%', 'important');
+    clonedImg.style.setProperty('object-fit', 'contain', 'important');
+    clonedImg.style.setProperty('display', 'block', 'important');
+    clonedImg.style.setProperty('opacity', '1', 'important');
+    clonedImg.style.setProperty('visibility', 'visible', 'important');
+    clonedImg.style.setProperty('max-width', '100%', 'important');
+    clonedImg.style.setProperty('max-height', '100%', 'important');
+    
+    // Ensure src is set (in case it was a data URL or relative path)
+    if (!clonedImg.src && sourceElement.src) {
+      clonedImg.src = sourceElement.src;
     }
-    element.appendChild(fragment);
+    
+    element.appendChild(clonedImg);
+  } else {
+    // Try to clone innerHTML first to preserve styles, fallback to node cloning
+    if (sourceElement.innerHTML) {
+      element.innerHTML = sourceElement.innerHTML;
+    } else {
+      const fragment = document.createDocumentFragment();
+      const children = sourceElement.childNodes;
+      for (let i = 0, len = children.length; i < len; i++) {
+        const child = children[i];
+        // Only clone element nodes, skip text nodes
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          fragment.appendChild(child.cloneNode(true));
+        }
+      }
+      element.appendChild(fragment);
+    }
+    
+    // Ensure images and other content are properly sized
+    const images = element.querySelectorAll('img');
+    images.forEach(img => {
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      img.style.display = 'block';
+    });
   }
-  
-  // Ensure images and other content are properly sized
-  const images = element.querySelectorAll('img');
-  images.forEach(img => {
-    img.style.width = '100%';
-    img.style.height = '100%';
-    img.style.objectFit = 'contain';
-    img.style.display = 'block';
-  });
 
   // Add the element to body
   document.body.appendChild(element);
   
   // Force a reflow to ensure element is rendered before animation starts
+  const rect = element.getBoundingClientRect();
   element.offsetHeight;
+  
+  // Verify element is visible and has dimensions
+  if (rect.width === 0 || rect.height === 0) {
+    console.warn('AddToCart: Cloned element has zero dimensions', {
+      element,
+      rect,
+      sourceElement,
+      sourceRect: productRect
+    });
+    
+    // Try to fix by using source dimensions directly
+    element.style.width = `${productRect.width}px`;
+    element.style.height = `${productRect.height}px`;
+  }
   
   // Small delay to ensure browser has painted the element
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
