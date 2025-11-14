@@ -38,7 +38,20 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
 
   // Get bounding rectangles for both elements
   const cartRect = destination.getBoundingClientRect();
-  const productRect = triggerElement.getBoundingClientRect();
+  
+  // Handle display: contents - get the actual rendered element
+  let sourceElement = triggerElement;
+  let productRect = triggerElement.getBoundingClientRect();
+  
+  // If the trigger has display: contents or zero size, find the first visible child
+  if (productRect.width === 0 || productRect.height === 0 || 
+      window.getComputedStyle(triggerElement).display === 'contents') {
+    const firstChild = triggerElement.firstElementChild;
+    if (firstChild) {
+      sourceElement = firstChild;
+      productRect = firstChild.getBoundingClientRect();
+    }
+  }
 
   // Calculate center points
   const cartCenter = {
@@ -61,22 +74,56 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
   const element = document.createElement('div');
   element.className = 'cart-item';
   
-  // Set initial position and size
-  element.style.left = `${productRect.left}px`;
-  element.style.top = `${productRect.top}px`;
-  element.style.width = `${productRect.width}px`;
-  element.style.height = `${productRect.height}px`;
+  // Position element at the center of the source element
+  // We position at top-left, then offset by half width/height to center
+  const elementWidth = productRect.width;
+  const elementHeight = productRect.height;
+  const centerX = productRect.left + productRect.width / 2;
+  const centerY = productRect.top + productRect.height / 2;
+  
+  // Set initial position (centered on source element)
+  element.style.left = `${centerX - elementWidth / 2}px`;
+  element.style.top = `${centerY - elementHeight / 2}px`;
+  element.style.width = `${elementWidth}px`;
+  element.style.height = `${elementHeight}px`;
+  element.style.zIndex = '99999'; // Ensure it's above everything
+  element.style.pointerEvents = 'none';
+  element.style.backgroundColor = 'transparent'; // Ensure no background blocks content
 
-  // Clone the content from trigger element
-  const fragment = document.createDocumentFragment();
-  const children = triggerElement.childNodes;
-  for (let i = 0, len = children.length; i < len; i++) {
-    fragment.appendChild(children[i].cloneNode(true));
+  // Clone the content from the actual source element
+  // Try to clone innerHTML first to preserve styles, fallback to node cloning
+  if (sourceElement.innerHTML) {
+    element.innerHTML = sourceElement.innerHTML;
+  } else {
+    const fragment = document.createDocumentFragment();
+    const children = sourceElement.childNodes;
+    for (let i = 0, len = children.length; i < len; i++) {
+      const child = children[i];
+      // Only clone element nodes, skip text nodes
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        fragment.appendChild(child.cloneNode(true));
+      }
+    }
+    element.appendChild(fragment);
   }
-  element.appendChild(fragment);
+  
+  // Ensure images and other content are properly sized
+  const images = element.querySelectorAll('img');
+  images.forEach(img => {
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'contain';
+    img.style.display = 'block';
+  });
 
   // Add the element to body
   document.body.appendChild(element);
+  
+  // Force a reflow to ensure element is rendered before animation starts
+  element.offsetHeight;
+  
+  // Small delay to ensure browser has painted the element
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   // Mark as active
   activeAnimations.add(triggerElement);
