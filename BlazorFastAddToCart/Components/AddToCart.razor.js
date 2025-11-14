@@ -93,7 +93,7 @@ function ensureStylesInjected() {
 /**
  * Initialize component
  */
-export function initialize(triggerElement, destinationSelector, dotNetRef) {
+export function initialize(triggerElement, destinationSelector, dotNetRef, triggerSelector) {
   if (!triggerElement || components.has(triggerElement)) return;
   
   // Ensure global styles are injected
@@ -101,15 +101,17 @@ export function initialize(triggerElement, destinationSelector, dotNetRef) {
 
   components.set(triggerElement, {
     destination: destinationSelector,
-    dotNetRef
+    dotNetRef,
+    triggerSelector: triggerSelector || null
   });
 }
 
 /**
  * Main animation function - matches the JavaScript demo behavior
  * Supports rapid clicking - multiple animations can run concurrently
+ * Supports Count parameter for multiple staggered animations
  */
-export async function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale, dotNetRef) {
+export async function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale, dotNetRef, count = 1, triggerSelector = null, batchId = 0) {
   // Ensure global styles are injected
   ensureStylesInjected();
 
@@ -119,9 +121,69 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
     return;
   }
 
+  // Determine the actual trigger element (use selector if provided, otherwise use triggerElement)
+  let actualTriggerElement = triggerElement;
+  if (triggerSelector) {
+    const foundElement = triggerElement.querySelector?.(triggerSelector) || document.querySelector(triggerSelector);
+    if (foundElement) {
+      actualTriggerElement = foundElement;
+    }
+  }
+
+  const animationCount = Math.max(1, Math.floor(count || 1));
+  
+  // Calculate stagger delay (spread animations over a portion of the animation duration)
+  const staggerDelay = animationCount > 1 ? (speed * 1000) / (animationCount * 2) : 0;
+  
+  // Track progress across all animations
+  // Each animation will have its own progress (0-1), we'll track the sum
+  const progressTracker = {
+    total: animationCount,
+    completed: 0,
+    progressSum: 0, // Sum of all individual animation progresses
+    lastReportedProgress: 0
+  };
+
+  // Launch multiple animations with stagger
+  for (let i = 0; i < animationCount; i++) {
+    const delay = i * staggerDelay;
+    
+    if (delay > 0) {
+      setTimeout(() => {
+        animateSingleItem(actualTriggerElement, destination, speed, easingX, easingY, easingScale, dotNetRef, progressTracker, batchId);
+      }, delay);
+    } else {
+      // First animation starts immediately
+      animateSingleItem(actualTriggerElement, destination, speed, easingX, easingY, easingScale, dotNetRef, progressTracker, batchId);
+    }
+  }
+}
+
+/**
+ * Animate a single item to cart
+ */
+async function animateSingleItem(triggerElement, destination, speed, easingX, easingY, easingScale, dotNetRef, progressTracker, batchId = 0) {
+  // Track this animation's individual progress
+  let animationProgress = 0;
+
   // Check for reduced motion preference
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     showReducedMotionFeedback(destination);
+    // Still report completion for reduced motion
+    if (progressTracker) {
+      progressTracker.progressSum = progressTracker.progressSum - animationProgress + 1.0;
+      progressTracker.completed++;
+      if (dotNetRef) {
+        const finalProgress = progressTracker.progressSum / progressTracker.total;
+        dotNetRef.invokeMethodAsync('OnAnimationProgressUpdate', Math.min(finalProgress, 1.0))
+          .catch(() => { /* Ignore errors */ });
+        dotNetRef.invokeMethodAsync('OnAnimationCompleted', batchId).catch(() => { /* Ignore errors */ });
+      }
+    } else if (dotNetRef) {
+      dotNetRef.invokeMethodAsync('OnAnimationProgressUpdate', 1.0)
+        .catch(() => { /* Ignore errors */ });
+      dotNetRef.invokeMethodAsync('OnAnimationCompleted', batchId).catch(() => { /* Ignore errors */ });
+    }
     return;
   }
 
@@ -399,6 +461,24 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
     element.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
     element.style.opacity = currentOpacity;
     
+    // Update this animation's progress
+    animationProgress = progress;
+    
+    // Report progress (throttle updates to avoid excessive calls)
+    if (progressTracker && dotNetRef) {
+      // Calculate overall progress: average of all animation progresses
+      // Update the sum: subtract old progress, add new progress
+      progressTracker.progressSum = progressTracker.progressSum - animationProgress + progress;
+      const overallProgress = progressTracker.progressSum / progressTracker.total;
+      
+      // Only report if progress changed significantly (reduce callback frequency)
+      if (Math.abs(overallProgress - progressTracker.lastReportedProgress) > 0.01 || progress >= 1) {
+        progressTracker.lastReportedProgress = overallProgress;
+        dotNetRef.invokeMethodAsync('OnAnimationProgressUpdate', Math.min(overallProgress, 1.0))
+          .catch(() => { /* Ignore errors if method doesn't exist */ });
+      }
+    }
+    
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
@@ -408,9 +488,31 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
       }
       activeAnimationElements.delete(element);
       
-      // Notify .NET that animation completed
-      if (dotNetRef) {
-        dotNetRef.invokeMethodAsync('OnAnimationCompleted').catch(() => { /* Ignore errors if method doesn't exist */ });
+      // Update progress tracker
+      if (progressTracker) {
+        // Update progress sum: this animation is now complete (progress = 1)
+        progressTracker.progressSum = progressTracker.progressSum - animationProgress + 1.0;
+        progressTracker.completed++;
+        
+        // Report final progress
+        if (dotNetRef) {
+          const finalProgress = progressTracker.progressSum / progressTracker.total;
+          dotNetRef.invokeMethodAsync('OnAnimationProgressUpdate', Math.min(finalProgress, 1.0))
+            .catch(() => { /* Ignore errors */ });
+        }
+        
+        // Notify .NET that this animation completed
+        // The C# side will track completions and only fire OnAnimationComplete when all are done
+        if (dotNetRef) {
+          dotNetRef.invokeMethodAsync('OnAnimationCompleted', batchId).catch(() => { /* Ignore errors if method doesn't exist */ });
+        }
+      } else {
+        // Fallback for single animation (no progress tracker)
+        if (dotNetRef) {
+          dotNetRef.invokeMethodAsync('OnAnimationProgressUpdate', 1.0)
+            .catch(() => { /* Ignore errors */ });
+          dotNetRef.invokeMethodAsync('OnAnimationCompleted', batchId).catch(() => { /* Ignore errors if method doesn't exist */ });
+        }
       }
     }
   };

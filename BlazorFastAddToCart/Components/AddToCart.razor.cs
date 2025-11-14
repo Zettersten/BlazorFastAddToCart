@@ -12,6 +12,9 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   private DotNetObjectReference<AddToCart>? _dotNetRef;
   private IJSObjectReference? _module;
   private bool _isInitialized;
+  private int _activeAnimations;
+  private int _completedAnimations;
+  private long _batchId;
 
   [Inject]
   private IJSRuntime JS { get; set; } = default!;
@@ -37,6 +40,15 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   [Parameter]
   public EventCallback OnAnimationComplete { get; set; }
 
+  [Parameter]
+  public int Count { get; set; } = 1;
+
+  [Parameter]
+  public string? Trigger { get; set; }
+
+  [Parameter]
+  public EventCallback<double> OnAnimationProgress { get; set; }
+
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (firstRender)
@@ -49,7 +61,8 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
         )
         .ConfigureAwait(false);
 
-      await _module.InvokeVoidAsync("initialize", _triggerRef, Destination, _dotNetRef);
+      var triggerSelector = Trigger ?? null;
+      await _module.InvokeVoidAsync("initialize", _triggerRef, Destination, _dotNetRef, triggerSelector);
 
       _isInitialized = true;
     }
@@ -57,9 +70,17 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
 
   private async Task OnClickAsync()
   {
-    if (!_isInitialized || _module is null)
+    if (!_isInitialized || _module is null || Count < 1)
       return;
 
+    // Start new animation batch with unique ID
+    _batchId++;
+    var currentBatchId = _batchId;
+    _activeAnimations = Count;
+    _completedAnimations = 0;
+
+    var triggerSelector = Trigger ?? null;
+    
     await _module.InvokeVoidAsync(
       "animateToCart",
       _triggerRef,
@@ -68,17 +89,43 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       EasingX.ToCssString(),
       EasingY.ToCssString(),
       EasingScale.ToCssString(),
-      _dotNetRef
+      _dotNetRef,
+      Count,
+      triggerSelector,
+      currentBatchId
     );
   }
 
   [JSInvokable]
-  public async Task OnAnimationCompleted()
+  public async Task OnAnimationCompleted(long batchId)
   {
-    // This is called from JavaScript when animation completes
-    if (OnAnimationComplete.HasDelegate)
+    // Only process completions for the current batch (ignore stale batches from rapid clicks)
+    if (batchId != _batchId)
+      return;
+    
+    // Track completion for multiple animations
+    _completedAnimations++;
+    
+    // Only fire callback when all animations complete
+    if (_completedAnimations >= _activeAnimations)
     {
-      await OnAnimationComplete.InvokeAsync();
+      _completedAnimations = 0;
+      _activeAnimations = 0;
+      
+      if (OnAnimationComplete.HasDelegate)
+      {
+        await OnAnimationComplete.InvokeAsync();
+      }
+    }
+  }
+
+  [JSInvokable]
+  public async Task OnAnimationProgressUpdate(double progress)
+  {
+    // Progress is 0.0 to 1.0 representing overall progress across all animations
+    if (OnAnimationProgress.HasDelegate)
+    {
+      await OnAnimationProgress.InvokeAsync(progress);
     }
   }
 
