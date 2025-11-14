@@ -9,47 +9,18 @@
   touch-action: manipulation;
 }
 
-/* Cart item animation - JavaScript handles the animation */
-.cart-item {
-  position: fixed;
-  z-index: 99999;
-  pointer-events: none;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform-origin: center center;
-  
-  /* Initial state - JavaScript will set position and size */
-  transform: translate(0, 0) scale(1);
-  opacity: 1;
-  
-  /* Ensure visibility */
-  visibility: visible;
-  display: block;
-  overflow: visible;
-  
-  /* Ensure content is visible */
-  box-sizing: border-box;
-}
-
-.cart-item img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain;
-  display: block;
-}
-
-.cart-item > * {
-  width: 100%;
-  height: 100%;
-}
+/* 
+ * NOTE: The .cart-item styles are dynamically injected via JavaScript
+ * (see AddToCart.razor.js ensureStylesInjected function) because the
+ * animated element is appended to document.body, which is outside the
+ * Blazor component's CSS scope. This ensures the styles apply globally.
+ * 
+ * If you prefer to include these styles in a global CSS file instead,
+ * you can copy the styles from the ensureStylesInjected function.
+ */
 
 /* Reduced motion support - critical for accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .cart-item {
-    display: none !important;
-  }
-
   /* Provide visual feedback without motion */
   .cart-ping {
     animation: cart-pulse 0.2s ease-out;
@@ -67,21 +38,6 @@
     100% {
       transform: scale(1);
     }
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .cart-item {
-    outline: 2px solid currentColor;
-    outline-offset: -2px;
-  }
-}
-
-/* Dark mode optimizations */
-@media (prefers-color-scheme: dark) {
-  .cart-item {
-    filter: brightness(0.9);
   }
 }
 
@@ -106,32 +62,4 @@
   }
 }
 
-/* Cart item content styling */
-.cart-item img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
 
-.cart-item > * {
-  pointer-events: none;
-  width: 100%;
-  height: 100%;
-}
-
-/* Print styles - hide animations */
-@media print {
-  .cart-item {
-    display: none !important;
-  }
-}
-
-/* Forced colors mode (Windows High Contrast) */
-@media (forced-colors: active) {
-  .cart-item {
-    border: 1px solid CanvasText;
-  }
-}

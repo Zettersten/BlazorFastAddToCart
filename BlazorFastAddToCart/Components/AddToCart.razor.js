@@ -5,11 +5,98 @@
 const components = new WeakMap();
 const activeAnimations = new WeakSet();
 
+// Inject global styles for cart-item (since it's appended to body, outside component scope)
+let stylesInjected = false;
+function ensureStylesInjected() {
+  if (stylesInjected) return;
+  
+  const styleId = 'blazor-fast-add-to-cart-styles';
+  if (document.getElementById(styleId)) {
+    stylesInjected = true;
+    return;
+  }
+  
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    /* Cart item animation - JavaScript handles the animation */
+    .cart-item {
+      position: fixed;
+      z-index: 99999;
+      pointer-events: none;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-origin: center center;
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+      visibility: visible;
+      display: block;
+      overflow: visible;
+      box-sizing: border-box;
+    }
+    
+    .cart-item img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain;
+      display: block;
+    }
+    
+    .cart-item > * {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .cart-item {
+        display: none !important;
+      }
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .cart-item {
+        outline: 2px solid currentColor;
+        outline-offset: -2px;
+      }
+    }
+    
+    /* Dark mode optimizations */
+    @media (prefers-color-scheme: dark) {
+      .cart-item {
+        filter: brightness(0.9);
+      }
+    }
+    
+    /* Print styles */
+    @media print {
+      .cart-item {
+        display: none !important;
+      }
+    }
+    
+    /* Forced colors mode */
+    @media (forced-colors: active) {
+      .cart-item {
+        border: 1px solid CanvasText;
+      }
+    }
+  `;
+  
+  document.head.appendChild(style);
+  stylesInjected = true;
+}
+
 /**
  * Initialize component
  */
 export function initialize(triggerElement, destinationSelector, dotNetRef) {
   if (!triggerElement || components.has(triggerElement)) return;
+  
+  // Ensure global styles are injected
+  ensureStylesInjected();
 
   components.set(triggerElement, {
     destination: destinationSelector,
@@ -21,6 +108,9 @@ export function initialize(triggerElement, destinationSelector, dotNetRef) {
  * Main animation function - matches the JavaScript demo behavior
  */
 export async function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale, dotNetRef) {
+  // Ensure global styles are injected
+  ensureStylesInjected();
+  
   // Early exit if already animating
   if (activeAnimations.has(triggerElement)) return;
 
