@@ -9,6 +9,8 @@ A high-performance Blazor component that animates items flying into a shopping c
 
 **[View the interactive demo](https://zettersten.github.io/BlazorFastAddToCart/)**
 
+![Sample 1](https://github.com/Zettersten/BlazorFastAddToCart/blob/main/sample-1.gif?raw=true)
+
 ## ✨ Features
 
 - **High Performance**: Zero-allocation cubic bezier easing, optimized for AOT compilation
