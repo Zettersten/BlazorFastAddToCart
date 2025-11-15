@@ -71,6 +71,27 @@
   font-weight: 700;
 }
 
+.collection-score {
+  font-size: 1rem;
+  color: #764ba2;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.combo-indicator {
+  font-size: 0.875rem;
+  color: #fbbf24;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  animation: combo-pulse 0.5s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+}
+
+@keyframes combo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
 .stars-field {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
@@ -167,6 +188,20 @@
   padding: 0.25rem 0.5rem;
   border-radius: 1rem;
   animation: bounce-notification 0.5s ease-in-out infinite;
+}
+
+.inbox-achievement {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #f5576c;
+  text-align: center;
+  animation: achievement-bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes achievement-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 @keyframes bounce-notification {
@@ -305,6 +340,14 @@
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
+.battery-progress {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  text-align: center;
+}
+
 @keyframes pulse-full {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -402,6 +445,26 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   z-index: 1;
+}
+
+.particle-progress {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #667eea;
+  margin-top: 0.25rem;
+  z-index: 1;
+}
+
+.particle-achievement {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #764ba2;
+  white-space: nowrap;
+  animation: achievement-bounce 0.6s ease-in-out infinite;
 }
 
 .particle-rings {
@@ -503,12 +566,36 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
+.chest-count-wrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  z-index: 1;
+}
+
 .chest-count {
   font-size: 2.5rem;
   font-weight: 700;
   color: #fbbf24;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  z-index: 1;
+}
+
+.chest-total {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #92400e;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.chest-achievement {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fbbf24;
+  text-align: center;
+  animation: achievement-bounce 0.6s ease-in-out infinite;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .chest-glow {
@@ -635,6 +722,14 @@
   font-weight: 700;
   color: #ec4899;
   animation: heart-bounce 1s ease-in-out infinite;
+}
+
+.meter-remaining {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #9ca3af;
+  font-style: italic;
 }
 
 @keyframes heart-bounce {

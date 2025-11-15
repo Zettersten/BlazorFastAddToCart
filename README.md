@@ -162,6 +162,28 @@ Easing function for scale transformation. Controls how the item scales down duri
 </AddToCart>
 ```
 
+### `OnBeforeAnimation`
+
+**Type**: `EventCallback`  
+**Default**: `null`
+
+Callback invoked before the animation starts. Use this to prepare data, update UI state, perform validation, or execute any logic that should happen before the animation begins. This callback fires once per click, even when `Count > 1`.
+
+```razor
+<AddToCart Destination="#cart" OnBeforeAnimation="PrepareAnimation" OnAnimationComplete="HandleAddToCart">
+    <img src="product.jpg" />
+</AddToCart>
+
+@code {
+    private async Task PrepareAnimation()
+    {
+        // Prepare data, update UI, or perform validation before animation starts
+        await ValidateItemAsync();
+        StateHasChanged();
+    }
+}
+```
+
 ### `OnAnimationComplete`
 
 **Type**: `EventCallback`  
@@ -766,6 +788,7 @@ dotnet test
 | `EasingX` | `CubicBezier` | No | `CubicBezier.CartX` | Horizontal movement easing |
 | `EasingY` | `CubicBezier` | No | `CubicBezier.CartY` | Vertical movement easing |
 | `EasingScale` | `CubicBezier` | No | `CubicBezier.CartScale` | Scale transformation easing |
+| `OnBeforeAnimation` | `EventCallback` | No | `null` | Callback before animation starts (fires once per click) |
 | `OnAnimationComplete` | `EventCallback` | No | `null` | Callback when animation completes (fires once for multiple animations) |
 | `Count` | `int` | No | `1` | Number of items to animate with staggered timing |
 | `Trigger` | `string?` | No | `null` | CSS selector for specific trigger element |

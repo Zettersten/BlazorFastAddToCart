@@ -37,6 +37,9 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   public RenderFragment? ChildContent { get; set; }
 
   [Parameter]
+  public EventCallback OnBeforeAnimation { get; set; }
+
+  [Parameter]
   public EventCallback OnAnimationComplete { get; set; }
 
   [Parameter]
@@ -71,6 +74,12 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   {
     if (!_isInitialized || _module is null || Count < 1)
       return;
+
+    // Fire OnBeforeAnimation callback if provided
+    if (OnBeforeAnimation.HasDelegate)
+    {
+      await OnBeforeAnimation.InvokeAsync();
+    }
 
     // Start new animation batch with unique ID
     _batchId++;
