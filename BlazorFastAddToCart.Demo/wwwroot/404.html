@@ -3,19 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <title>BlazorFastAddToCart Demo</title>
-  <script>
-    // GitHub Pages SPA redirect for Blazor routing
-    // Store the full path before redirecting
-    sessionStorage.redirect = location.href;
-
-    // Get the base path from current URL
-    // For GitHub Pages projects, this extracts the repo name from the path
-    var pathSegments = location.pathname.split('/').filter(function(segment) { return segment && segment !== '404.html'; });
-    var basePath = pathSegments.length > 0 ? '/' + pathSegments[0] + '/' : '/';
-
-    // Redirect to index.html at the base path, which will restore the full route
-    location.replace(basePath + 'index.html');
-  </script>
+  <!-- GitHub Pages SPA routing support -->
+    <script>
+        (function() {
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect != location.href) {
+                history.replaceState(null, null, redirect);
+            }
+        })();
+    </script>
 </head>
 <body>
 </body>
