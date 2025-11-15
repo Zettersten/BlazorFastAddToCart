@@ -6,21 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BlazorFastAddToCart Demo</title>
   <base href="/" />
-  <script>
-    // Set base href immediately before any resources load
-    (function() {
-      var pathSegments = location.pathname.split('/').filter(function(segment) { 
-        return segment && segment !== 'index.html'; 
-      });
-      if (pathSegments.length > 0) {
-        var basePath = '/' + pathSegments[0] + '/';
-        var baseTag = document.querySelector('base');
-        if (baseTag) {
-          baseTag.setAttribute('href', basePath);
-        }
-      }
-    })();
-  </script>
+  <!-- GitHub Pages SPA routing support -->
+    <script>
+        (function() {
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect != location.href) {
+                history.replaceState(null, null, redirect);
+            }
+        })();
+    </script>
   <link rel="stylesheet" href="css/app.css" />
   <link href="BlazorFastAddToCart.Demo.styles.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
