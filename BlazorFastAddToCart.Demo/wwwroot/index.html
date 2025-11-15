@@ -19,37 +19,6 @@
   <link rel="stylesheet" href="css/app.css" />
   <link href="BlazorFastAddToCart.Demo.styles.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
-
-  <!-- GitHub Pages SPA routing support -->
-  <script>
-    (function () {
-      // Get the base path from the base tag (already set by the script above)
-      var baseTag = document.querySelector('base');
-      var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
-      
-      // Restore the route from sessionStorage (set by 404.html)
-      var redirect = sessionStorage.redirect;
-      delete sessionStorage.redirect;
-      if (redirect && redirect !== location.href) {
-        try {
-          var redirectUrl = new URL(redirect);
-          var redirectPath = redirectUrl.pathname;
-          
-          // Extract path relative to base href
-          var relativePath = redirectPath;
-          if (baseHref !== '/' && redirectPath.startsWith(baseHref)) {
-            relativePath = redirectPath.substring(baseHref.length - 1);
-          }
-          
-          history.replaceState(null, null, relativePath);
-        } catch (e) {
-          // Fallback: use the stored redirect as-is
-          var storedPath = redirect.replace(location.origin, '');
-          history.replaceState(null, null, storedPath);
-        }
-      }
-    })();
-  </script>
 </head>
 
 <body>
