@@ -13,7 +13,7 @@ A high-performance Blazor component that animates items flying into a shopping c
 
 ## ✨ Features
 
-- **High Performance**: Zero-allocation cubic bezier easing, optimized for AOT compilation
+- **High Performance**: Allocation-conscious cubic bezier easing (passes control points to JS to avoid per-click easing-string formatting and regex parsing)
 - **Customizable Animations**: Independent easing functions for X, Y, and scale transformations
 - **Multiple Items**: Animate multiple items with staggered timing using the `Count` parameter
 - **Custom Triggers**: Specify which element triggers the animation with the `Trigger` parameter
@@ -304,7 +304,7 @@ The content to wrap and animate. Can be any HTML element, image, button, or comp
 
 ## 🎨 Easing Functions
 
-The component includes a comprehensive set of predefined easing functions via the `CubicBezier` struct. All easing functions are compile-time constants with zero allocations.
+The component includes a comprehensive set of predefined easing functions via the `CubicBezier` struct. The predefined `CubicBezier` values are allocation-free; `ToCssString()` allocates the returned string and is meant for display/debugging.
 
 ### Standard Easing Functions
 
@@ -755,7 +755,7 @@ No additional configuration needed - these features work automatically!
 
 ## ⚡ Performance Considerations
 
-- **Zero Allocations**: Easing functions use stack allocation for string formatting
+- **Low Allocation**: Easing control points are passed to JS (avoids per-click easing-string formatting in .NET and regex parsing in JS). `CubicBezier.ToCssString()` is intended for display/debugging and allocates the returned string.
 - **Concurrent Animations**: Multiple animations can run simultaneously without performance degradation
 - **GPU Acceleration**: Uses CSS transforms for hardware-accelerated animations
 - **AOT Compatible**: Fully compatible with .NET AOT compilation
@@ -763,19 +763,21 @@ No additional configuration needed - these features work automatically!
 
 ## 🧪 Testing
 
-The solution includes comprehensive BUnit tests covering:
+The solution includes bUnit tests covering:
 
 - Component rendering
-- Lifecycle methods
 - Event callbacks
-- Parameter forwarding
-- Animation completion
+- JS interop initialization / invocations
 
 Run tests locally:
 
 ```bash
 dotnet test
 ```
+
+## 📝 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## 📖 API Reference
 

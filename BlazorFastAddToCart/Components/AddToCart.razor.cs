@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-
 namespace BlazorFastAddToCart;
 
 /// <summary>
@@ -19,7 +16,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   private IJSRuntime JS { get; set; } = default!;
 
   [Parameter, EditorRequired]
-  public string Destination { get; set; }
+  public string Destination { get; set; } = string.Empty;
 
   [Parameter]
   public double Speed { get; set; } = 0.6; // Duration in seconds
@@ -64,7 +61,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
         .ConfigureAwait(false);
 
       var triggerSelector = Trigger ?? null;
-      await _module.InvokeVoidAsync("initialize", _triggerRef, Destination, _dotNetRef, triggerSelector);
+      await _module.InvokeVoidAsync("initialize");
 
       _isInitialized = true;
     }
@@ -73,6 +70,9 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
   private async Task OnClickAsync()
   {
     if (!_isInitialized || _module is null || Count < 1)
+      return;
+
+    if (string.IsNullOrWhiteSpace(Destination))
       return;
 
     // Fire OnBeforeAnimation callback if provided
@@ -86,11 +86,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
     var currentBatchId = _batchId;
     
     // Track this batch independently
-    _activeBatches[currentBatchId] = new BatchTracker
-    {
-      ActiveAnimations = Count,
-      CompletedAnimations = 0
-    };
+    _activeBatches[currentBatchId] = new BatchTracker(ActiveAnimations: Count, CompletedAnimations: 0);
 
     var triggerSelector = Trigger ?? null;
     
@@ -99,9 +95,9 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       _triggerRef,
       Destination,
       Speed,
-      EasingX.ToCssString(),
-      EasingY.ToCssString(),
-      EasingScale.ToCssString(),
+      EasingX.X1, EasingX.Y1, EasingX.X2, EasingX.Y2,
+      EasingY.X1, EasingY.Y1, EasingY.X2, EasingY.Y2,
+      EasingScale.X1, EasingScale.Y1, EasingScale.X2, EasingScale.Y2,
       _dotNetRef,
       Count,
       triggerSelector,
@@ -117,7 +113,7 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       return; // Batch not found (shouldn't happen, but be safe)
     
     // Track completion for this batch
-    tracker.CompletedAnimations++;
+    tracker = tracker with { CompletedAnimations = tracker.CompletedAnimations + 1 };
     
     // Fire callback when all animations in this batch complete
     if (tracker.CompletedAnimations >= tracker.ActiveAnimations)
@@ -130,6 +126,10 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
       {
         await OnAnimationComplete.InvokeAsync();
       }
+    }
+    else
+    {
+      _activeBatches[batchId] = tracker;
     }
   }
 
@@ -154,9 +154,5 @@ public partial class AddToCart : ComponentBase, IAsyncDisposable
     _dotNetRef?.Dispose();
   }
 
-  private class BatchTracker
-  {
-    public int ActiveAnimations { get; set; }
-    public int CompletedAnimations { get; set; }
-  }
+  private readonly record struct BatchTracker(int ActiveAnimations, int CompletedAnimations);
 }

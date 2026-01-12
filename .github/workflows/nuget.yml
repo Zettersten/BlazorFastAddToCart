@@ -52,6 +52,40 @@ jobs:
       
     - name: Run tests
       run: dotnet test BlazorFastAddToCart.Tests/BlazorFastAddToCart.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Fail if zero tests discovered
+      run: |
+        python - <<'PY'
+        import glob
+        import sys
+        import xml.etree.ElementTree as ET
+
+        files = glob.glob("**/test-results.trx", recursive=True)
+        if not files:
+          sys.stderr.write("No test-results.trx files found.\n")
+          sys.exit(1)
+
+        totals = []
+        for f in files:
+          try:
+            tree = ET.parse(f)
+          except Exception as ex:
+            sys.stderr.write(f"Failed to parse TRX '{f}': {ex}\n")
+            sys.exit(1)
+
+          counters = tree.find(".//{*}Counters")
+          if counters is None:
+            continue
+
+          total = int(counters.attrib.get("total", "0"))
+          totals.append(total)
+
+        if not totals or max(totals) == 0:
+          sys.stderr.write("No tests discovered (TRX Counters total=0).\n")
+          sys.exit(1)
+
+        print(f"✅ Tests discovered: {sum(totals)} (max file total={max(totals)})")
+        PY
       
     - name: Publish test results
       uses: dorny/test-reporter@v1
