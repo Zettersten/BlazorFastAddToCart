@@ -1,11 +1,6 @@
 // AddToCart.razor.js
 // Implementation matching the JavaScript demo behavior
 
-// WeakMap for O(1) lookups without memory leaks
-const components = new WeakMap();
-// Track active animation elements (not triggers) so we can have multiple concurrent animations
-const activeAnimationElements = new WeakSet();
-
 // Inject global styles for cart-item (since it's appended to body, outside component scope)
 let stylesInjected = false;
 function ensureStylesInjected() {
@@ -93,17 +88,8 @@ function ensureStylesInjected() {
 /**
  * Initialize component
  */
-export function initialize(triggerElement, destinationSelector, dotNetRef, triggerSelector) {
-  if (!triggerElement || components.has(triggerElement)) return;
-  
-  // Ensure global styles are injected
+export function initialize() {
   ensureStylesInjected();
-
-  components.set(triggerElement, {
-    destination: destinationSelector,
-    dotNetRef,
-    triggerSelector: triggerSelector || null
-  });
 }
 
 /**
@@ -111,7 +97,18 @@ export function initialize(triggerElement, destinationSelector, dotNetRef, trigg
  * Supports rapid clicking - multiple animations can run concurrently
  * Supports Count parameter for multiple staggered animations
  */
-export async function animateToCart(triggerElement, destinationSelector, speed, easingX, easingY, easingScale, dotNetRef, count = 1, triggerSelector = null, batchId = 0) {
+export async function animateToCart(
+  triggerElement,
+  destinationSelector,
+  speed,
+  easingX1, easingXy1, easingX2, easingXy2,
+  easingY1, easingYy1, easingY2, easingYy2,
+  easingS1, easingSy1, easingS2, easingSy2,
+  dotNetRef,
+  count = 1,
+  triggerSelector = null,
+  batchId = 0
+) {
   // Ensure global styles are injected
   ensureStylesInjected();
 
@@ -150,11 +147,31 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
     
     if (delay > 0) {
       setTimeout(() => {
-        animateSingleItem(actualTriggerElement, destination, speed, easingX, easingY, easingScale, dotNetRef, progressTracker, batchId);
+        animateSingleItem(
+          actualTriggerElement,
+          destination,
+          speed,
+          easingX1, easingXy1, easingX2, easingXy2,
+          easingY1, easingYy1, easingY2, easingYy2,
+          easingS1, easingSy1, easingS2, easingSy2,
+          dotNetRef,
+          progressTracker,
+          batchId
+        );
       }, delay);
     } else {
       // First animation starts immediately
-      animateSingleItem(actualTriggerElement, destination, speed, easingX, easingY, easingScale, dotNetRef, progressTracker, batchId);
+      animateSingleItem(
+        actualTriggerElement,
+        destination,
+        speed,
+        easingX1, easingXy1, easingX2, easingXy2,
+        easingY1, easingYy1, easingY2, easingYy2,
+        easingS1, easingSy1, easingS2, easingSy2,
+        dotNetRef,
+        progressTracker,
+        batchId
+      );
     }
   }
 }
@@ -162,7 +179,17 @@ export async function animateToCart(triggerElement, destinationSelector, speed, 
 /**
  * Animate a single item to cart
  */
-async function animateSingleItem(triggerElement, destination, speed, easingX, easingY, easingScale, dotNetRef, progressTracker, batchId = 0) {
+async function animateSingleItem(
+  triggerElement,
+  destination,
+  speed,
+  easingX1, easingXy1, easingX2, easingXy2,
+  easingY1, easingYy1, easingY2, easingYy2,
+  easingS1, easingSy1, easingS2, easingSy2,
+  dotNetRef,
+  progressTracker,
+  batchId = 0
+) {
   // Track this animation's individual progress
   let animationProgress = 0;
 
@@ -264,22 +291,13 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
     return;
   }
 
-  // Calculate center points
-  const cartCenter = {
-    x: cartRect.left + cartRect.width / 2,
-    y: cartRect.top + cartRect.height / 2
-  };
-
-  const productCenter = {
-    x: productRect.left + productRect.width / 2,
-    y: productRect.top + productRect.height / 2
-  };
-
   // Calculate distance between centers
-  const distance = {
-    x: cartCenter.x - productCenter.x,
-    y: cartCenter.y - productCenter.y
-  };
+  const cartCenterX = cartRect.left + cartRect.width / 2;
+  const cartCenterY = cartRect.top + cartRect.height / 2;
+  const productCenterX = productRect.left + productRect.width / 2;
+  const productCenterY = productRect.top + productRect.height / 2;
+  const distanceX = cartCenterX - productCenterX;
+  const distanceY = cartCenterY - productCenterY;
 
   // Create a new element for the item (matching demo code structure)
   const element = document.createElement('div');
@@ -375,31 +393,13 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
   // Small delay to ensure browser has painted the element
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  // Mark this specific animation element as active (allows multiple concurrent animations)
-  activeAnimationElements.add(element);
-
   // To achieve separate easing for X, Y, and scale without GSAP,
   // we'll manually interpolate using cubic bezier easing functions
   const duration = speed * 1000;
   const startTime = performance.now();
   
-  // Parse cubic bezier strings to get control points
-  const parseEasing = (easingStr) => {
-    const match = easingStr.match(/cubic-bezier\s*\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\)/);
-    if (!match) return null;
-    return {
-      x1: parseFloat(match[1]),
-      y1: parseFloat(match[2]),
-      x2: parseFloat(match[3]),
-      y2: parseFloat(match[4])
-    };
-  };
-  
   // Evaluate cubic bezier at time t (0 to 1)
-  const evaluateBezier = (t, bezier) => {
-    if (!bezier) return t; // Fallback to linear
-    const { x1, y1, x2, y2 } = bezier;
-    
+  const evaluateBezier = (t, x1, y1, x2, y2) => {
     // Use Newton-Raphson to find t for given x, then return y
     // Simplified: approximate using de Casteljau's algorithm
     let currentT = t;
@@ -437,23 +437,19 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
     return 3 * mt * mt * x1 + 6 * mt * t * (x2 - x1) + 3 * t * t * (1 - x2);
   };
   
-  const easingXBezier = parseEasing(easingX);
-  const easingYBezier = parseEasing(easingY);
-  const easingScaleBezier = parseEasing(easingScale);
-  
   // Animate using requestAnimationFrame
   const animate = (currentTime) => {
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
     
     // Calculate eased values for each component
-    const easedX = evaluateBezier(progress, easingXBezier);
-    const easedY = evaluateBezier(progress, easingYBezier);
-    const easedScale = evaluateBezier(progress, easingScaleBezier);
+    const easedX = evaluateBezier(progress, easingX1, easingXy1, easingX2, easingXy2);
+    const easedY = evaluateBezier(progress, easingY1, easingYy1, easingY2, easingYy2);
+    const easedScale = evaluateBezier(progress, easingS1, easingSy1, easingS2, easingSy2);
     
     // Calculate current values
-    const currentX = easedX * distance.x;
-    const currentY = easedY * distance.y;
+    const currentX = easedX * distanceX;
+    const currentY = easedY * distanceY;
     const currentScale = 1 + (0.2 - 1) * easedScale;
     const currentOpacity = progress < 0.8 ? 1 : 1 - ((progress - 0.8) / 0.2);
     
@@ -490,7 +486,6 @@ async function animateSingleItem(triggerElement, destination, speed, easingX, ea
       if (element.parentNode) {
         element.remove();
       }
-      activeAnimationElements.delete(element);
       
       // Update progress tracker
       if (progressTracker) {
@@ -543,7 +538,6 @@ export function cancelAll() {
   const flying = document.querySelectorAll('.cart-item');
   flying.forEach(el => {
     el.remove();
-    activeAnimationElements.delete(el);
   });
 }
 
